@@ -244,6 +244,10 @@ recordforge/
 A free game where you investigate corporate fraud by writing real SQL against a live database.
 No slides, no exercises — every query is evidence. Two full seasons.
 
+**[📊 SQL Prep Kit](https://michaelnocito.github.io/sql-prep-kit/)** —
+Learn SQL for analyst interviews by reading every query out loud, line by line.
+Browser-based, real SQLite, honest readiness score. No install.
+
 **[🧼 Spreadsheet Cleaner](https://michaelnocito.github.io/spreadsheet-cleaner/)** —
 A beginner Python project where you build a real data-cleaning tool layer by layer.
 The Messy Data output from RecordForge pairs directly with this cleaner.
