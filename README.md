@@ -244,9 +244,9 @@ recordforge/
 A free game where you investigate corporate fraud by writing real SQL against a live database.
 No slides, no exercises — every query is evidence. Two full seasons.
 
-**[📊 SQL Prep Kit](https://michaelnocito.github.io/sql-prep-kit/)** —
-Learn SQL for analyst interviews by reading every query out loud, line by line.
-Browser-based, real SQLite, honest readiness score. No install.
+**[📊 Analyst Prep Kit](https://michaelnocito.github.io/analyst-prep-kit/)** —
+A free browser-based suite for breaking into data analytics — SQL, Excel, Python, Tableau, and Statistics.
+12 lessons per module, real in-browser environments, honest readiness score. No install, no login.
 
 **[🧼 Spreadsheet Cleaner](https://michaelnocito.github.io/spreadsheet-cleaner/)** —
 A beginner Python project where you build a real data-cleaning tool layer by layer.
