@@ -11,145 +11,186 @@
   <meta property="og:url" content="https://michaelnocito.github.io/recordforge/" />
   <meta name="twitter:card" content="summary_large_image" />
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
-
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+    /* =======================================================================
+       RecordForge — docs landing
+       Re-skinned to the Nocito calm-analyst design system (light theme,
+       system fonts, blue accent). Green kept as the semantic success accent.
+       Code/terminal blocks stay dark — literal CLI output.
+       ======================================================================= */
     :root {
-      --bg:        #0d1117;
-      --surface:   #161b22;
-      --surface2:  #21262d;
-      --border:    #30363d;
-      --accent:    #0969da;
-      --accent-lt: #58a6ff;
-      --green:     #22c55e;
-      --amber:     #f59e0b;
-      --text:      #e6edf3;
-      --text-dim:  #8b949e;
-      --text-muted:#57606a;
-      --mono:      'JetBrains Mono', monospace;
-      --sans:      'Inter', system-ui, sans-serif;
+      --bg:#eef1f5; --panel:#ffffff; --line:#d6dce4;
+      --shadow:0 1px 2px rgba(20,30,50,.06), 0 6px 20px rgba(20,30,50,.06);
+      --ink:#1f2328; --dim:#5b6470;
+      --accent:#2f6df0; --accent-d:#1f4fc4;
+      --good:#1a7f37; --good-bg:#e7f6ec; --warm:#9a6700;
+      --tint:#f7faff; --tint-bd:#dde6f5;
+      --accent-soft:#eef4ff; --accent-soft-bd:#d4e1ff;
     }
-
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
-    body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 16px; line-height: 1.6; overflow-x: hidden; }
-    a { color: var(--accent-lt); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-
-    /* NAV */
-    nav {
-      position: sticky; top: 0; z-index: 100;
-      background: rgba(13,17,23,0.85); backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-      padding: 0 40px; height: 60px;
-      display: flex; align-items: center; justify-content: space-between;
+    body {
+      background: var(--bg); color: var(--ink);
+      font: 15px/1.55 -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
     }
-    .nav-logo { font-family: var(--mono); font-weight: 700; font-size: 16px; color: var(--accent-lt); letter-spacing: 1px; }
-    .nav-links { display: flex; gap: 28px; list-style: none; }
-    .nav-links a { color: var(--text-dim); font-size: 14px; font-weight: 500; transition: color 0.15s; }
-    .nav-links a:hover { color: var(--text); text-decoration: none; }
-    .nav-cta { background: var(--accent); color: #fff !important; padding: 8px 20px; border-radius: 8px; font-weight: 700; font-size: 14px; transition: background 0.15s; }
-    .nav-cta:hover { background: #0550ae !important; text-decoration: none !important; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: var(--accent-d); }
+    code, .mono { font-family: "Consolas", ui-monospace, monospace; }
 
-    /* HERO */
-    .hero { min-height: calc(100vh - 60px); display: flex; align-items: center; justify-content: center; text-align: center; padding: 80px 24px; position: relative; overflow: hidden; }
-    .hero-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(9,105,218,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(9,105,218,0.06) 1px, transparent 1px); background-size: 40px 40px; mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black 40%, transparent 100%); }
-    .hero-glow { position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, rgba(9,105,218,0.12) 0%, transparent 70%); top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; }
-    .hero-content { position: relative; max-width: 820px; }
-    .hero-eyebrow { display: inline-block; font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: 3px; color: var(--accent-lt); background: rgba(9,105,218,0.12); border: 1px solid rgba(9,105,218,0.3); padding: 6px 16px; border-radius: 100px; margin-bottom: 28px; }
-    h1 { font-size: clamp(38px, 6vw, 68px); font-weight: 900; line-height: 1.1; letter-spacing: -1.5px; margin-bottom: 24px; }
-    h1 span { color: var(--accent-lt); }
-    .hero-sub { font-size: clamp(17px, 2.5vw, 20px); color: var(--text-dim); max-width: 620px; margin: 0 auto 16px; line-height: 1.6; }
-    .hero-proof { font-size: 14px; color: var(--text-muted); margin-bottom: 44px; }
-    .hero-proof strong { color: var(--text-dim); }
-    .btn-group { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
-    .btn-primary { display: inline-flex; align-items: center; gap: 10px; background: var(--accent); color: #fff; font-weight: 700; font-size: 16px; padding: 14px 32px; border-radius: 10px; transition: background 0.15s, transform 0.1s; }
-    .btn-primary:hover { background: #0550ae; text-decoration: none; transform: translateY(-1px); }
-    .btn-secondary { display: inline-flex; align-items: center; gap: 10px; background: var(--surface2); color: var(--text); font-weight: 600; font-size: 16px; padding: 14px 32px; border-radius: 10px; border: 1px solid var(--border); transition: border-color 0.15s, transform 0.1s; }
-    .btn-secondary:hover { border-color: var(--accent-lt); text-decoration: none; transform: translateY(-1px); }
+    /* TOP BAR */
+    .topbar {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      background: var(--panel); border-bottom: 1px solid var(--line); padding: 10px 22px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand .logo {
+      font-size: 22px; color: var(--accent);
+      background: linear-gradient(135deg, var(--accent-soft), var(--accent-soft-bd));
+      width: 38px; height: 38px; display: grid; place-items: center; border-radius: 9px;
+    }
+    .brand-text { display: flex; flex-direction: column; line-height: 1.2; }
+    .brand-text strong { font-size: 15px; color: var(--ink); }
+    .brand-text .sub { font-size: 12px; color: var(--dim); }
+    .orient { display: flex; align-items: center; gap: 18px; }
+    .phase-chip {
+      font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+      padding: 5px 10px; border-radius: 6px; white-space: nowrap;
+      background: var(--accent-soft); color: var(--accent-d); border: 1px solid var(--accent-soft-bd);
+    }
+    .nav-links { display: flex; gap: 20px; list-style: none; }
+    .nav-links a { color: var(--dim); font-size: 13.5px; font-weight: 600; }
+    .nav-links a:hover { color: var(--accent-d); }
+    .nav-cta {
+      background: var(--accent); color: #fff !important; padding: 9px 18px; border-radius: 10px;
+      font-weight: 700; font-size: 13.5px;
+      box-shadow: 0 2px 8px rgba(47,109,240,.35); transition: background .15s;
+    }
+    .nav-cta:hover { background: var(--accent-d); color: #fff !important; }
 
-    /* SHARED SECTION */
-    section { padding: 100px 24px; }
-    .section-inner { max-width: 1100px; margin: 0 auto; }
-    .section-label { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 3px; color: var(--accent-lt); text-transform: uppercase; margin-bottom: 12px; }
-    h2 { font-size: clamp(28px, 4vw, 44px); font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; margin-bottom: 16px; }
-    .section-sub { font-size: 18px; color: var(--text-dim); max-width: 560px; line-height: 1.6; margin-bottom: 60px; }
+    /* LAYOUT */
+    section { padding: 64px 22px; }
+    .section-inner { max-width: 1080px; margin: 0 auto; }
+    .section-label {
+      font-size: 11px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
+      color: var(--accent-d); margin-bottom: 10px;
+    }
+    h2 { font-size: clamp(24px, 4vw, 34px); font-weight: 700; line-height: 1.2; letter-spacing: -.01em; margin-bottom: 14px; color: var(--ink); }
+    .section-sub { font-size: 16px; color: var(--dim); max-width: 580px; line-height: 1.6; margin-bottom: 44px; }
 
-    /* FILE TYPES */
-    .types-bg { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-    .types-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-    .type-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 28px 24px; text-align: center; transition: border-color 0.2s, transform 0.2s; }
-    .type-card:hover { border-color: rgba(9,105,218,0.5); transform: translateY(-2px); }
-    .type-icon { font-size: 36px; margin-bottom: 14px; }
-    .type-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
-    .type-card p { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+    /* HERO / WELCOME CARD */
+    .hero { padding: 40px 22px 24px; }
+    .welcome-card {
+      max-width: 1080px; margin: 0 auto;
+      background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+      box-shadow: var(--shadow); padding: 40px 44px; text-align: center;
+    }
+    .hero-eyebrow {
+      display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .09em;
+      text-transform: uppercase; color: var(--accent-d);
+      background: var(--accent-soft); border: 1px solid var(--accent-soft-bd);
+      padding: 6px 14px; border-radius: 999px; margin-bottom: 22px;
+    }
+    .welcome-card h1 {
+      font-size: clamp(32px, 6vw, 52px); font-weight: 700; line-height: 1.12;
+      letter-spacing: -.02em; margin-bottom: 18px; color: var(--ink);
+    }
+    .welcome-card h1 span { color: var(--accent); }
+    .hero-sub { font-size: clamp(16px, 2.5vw, 19px); color: var(--dim); max-width: 660px; margin: 0 auto 14px; line-height: 1.6; }
+    .hero-proof { font-size: 13.5px; color: var(--dim); margin-bottom: 32px; }
+    .hero-proof strong { color: var(--ink); }
+    .btn-group { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent); color: #fff; font-weight: 700; font-size: 15px;
+      padding: 12px 28px; border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(47,109,240,.35); transition: background .15s, transform .05s;
+    }
+    .btn-primary:hover { background: var(--accent-d); color: #fff; transform: translateY(-1px); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--panel); color: var(--dim); font-weight: 600; font-size: 15px;
+      padding: 12px 28px; border-radius: 10px; border: 1px solid var(--line);
+      transition: border-color .15s, color .15s, transform .05s;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent-d); transform: translateY(-1px); }
+
+    /* GENERIC CARD GRID HELPERS */
+    .types-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+    .type-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 24px 22px; text-align: center; transition: transform .18s, box-shadow .18s; }
+    .type-card:hover { transform: translateY(-2px); box-shadow: 0 2px 4px rgba(20,30,50,.07), 0 10px 28px rgba(20,30,50,.10); }
+    .type-icon { font-size: 32px; margin-bottom: 12px; }
+    .type-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; color: var(--ink); }
+    .type-card p { font-size: 13px; color: var(--dim); line-height: 1.6; }
     .type-examples { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 12px; }
-    .type-ex { font-family: var(--mono); font-size: 11px; color: var(--accent-lt); background: rgba(9,105,218,0.1); border: 1px solid rgba(9,105,218,0.2); padding: 2px 8px; border-radius: 4px; }
+    .type-ex { font-size: 11px; font-weight: 600; color: var(--dim); background: #f3f5f8; border: 1px solid var(--line); padding: 3px 9px; border-radius: 999px; }
 
-    /* USE CASES */
-    .usecases-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    .usecase-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px 24px; transition: border-color 0.2s; }
-    .usecase-card:hover { border-color: rgba(9,105,218,0.4); }
-    .usecase-icon { font-size: 28px; margin-bottom: 12px; }
-    .usecase-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
-    .usecase-card p { font-size: 14px; color: var(--text-dim); line-height: 1.65; }
+    .usecases-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .usecase-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 24px 22px; transition: transform .18s, box-shadow .18s; }
+    .usecase-card:hover { transform: translateY(-2px); box-shadow: 0 2px 4px rgba(20,30,50,.07), 0 10px 28px rgba(20,30,50,.10); }
+    .usecase-icon { font-size: 26px; margin-bottom: 12px; }
+    .usecase-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; color: var(--ink); }
+    .usecase-card p { font-size: 13.5px; color: var(--dim); line-height: 1.6; }
 
     /* TWO WAYS */
-    .twoways-bg { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-    .twoways-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-    .way-card { background: var(--bg); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
-    .way-header { padding: 28px 32px 20px; border-bottom: 1px solid var(--border); }
-    .way-tag { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 2px; padding: 4px 12px; border-radius: 100px; margin-bottom: 16px; display: inline-block; }
-    .app-tag { background: rgba(34,197,94,0.12); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
-    .pkg-tag { background: rgba(9,105,218,0.12); color: var(--accent-lt); border: 1px solid rgba(9,105,218,0.3); }
-    .way-card h3 { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
-    .way-card .way-sub { font-size: 14px; color: var(--text-dim); }
-    .way-body { padding: 24px 32px 32px; }
-    .way-body p { font-size: 15px; color: var(--text-dim); line-height: 1.7; margin-bottom: 20px; }
+    .twoways-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+    .way-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; }
+    .way-header { padding: 24px 28px 18px; border-bottom: 1px solid var(--line); }
+    .way-tag { font-size: 11px; font-weight: 800; letter-spacing: .07em; padding: 4px 11px; border-radius: 999px; margin-bottom: 14px; display: inline-block; text-transform: uppercase; }
+    .app-tag { background: #eaf3ee; color: var(--good); border: 1px solid #bfe5ca; }
+    .pkg-tag { background: var(--accent-soft); color: var(--accent-d); border: 1px solid var(--accent-soft-bd); }
+    .way-card h3 { font-size: 19px; font-weight: 700; margin-bottom: 6px; color: var(--ink); }
+    .way-card .way-sub { font-size: 13.5px; color: var(--dim); }
+    .way-body { padding: 22px 28px 28px; }
+    .way-body p { font-size: 14.5px; color: var(--dim); line-height: 1.7; margin-bottom: 18px; }
     .way-bullets { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-    .way-bullets li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--text-dim); }
-    .way-bullets li::before { content: "✓"; color: var(--green); font-weight: 700; flex-shrink: 0; }
+    .way-bullets li { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; color: var(--dim); }
+    .way-bullets li::before { content: "✓"; color: var(--good); font-weight: 700; flex-shrink: 0; }
 
-    /* CODE BLOCK */
-    .code-block { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-top: 20px; }
-    .code-bar { background: var(--surface2); padding: 10px 16px; font-family: var(--mono); font-size: 12px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
-    .code-body { padding: 20px; font-family: var(--mono); font-size: 13px; line-height: 2; }
-    .c-comment { color: #4b5563; }
-    .c-dollar  { color: var(--accent-lt); }
+    /* CODE BLOCK (dark — literal CLI) */
+    .code-block { background: #0e131b; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); margin-top: 18px; }
+    .code-bar { background: #1a212c; padding: 10px 16px; font-family: "Consolas", ui-monospace, monospace; font-size: 12px; color: #8a94a6; border-bottom: 1px solid #2a313d; }
+    .code-body { padding: 20px; font-family: "Consolas", ui-monospace, monospace; font-size: 13px; line-height: 2; color: #cdd6e4; }
+    .c-comment { color: #5b6573; }
+    .c-dollar  { color: #57d977; }
     .c-text    { color: #86efac; }
 
     /* INSTALL */
-    .install-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; }
-    .install-steps { display: flex; flex-direction: column; gap: 20px; }
-    .install-step { display: flex; gap: 18px; align-items: flex-start; }
-    .step-num { background: var(--accent); color: white; font-family: var(--mono); font-size: 13px; font-weight: 700; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .step-text strong { display: block; font-size: 15px; margin-bottom: 2px; }
-    .step-text span { font-size: 14px; color: var(--text-dim); }
+    .install-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: start; }
+    .install-steps { display: flex; flex-direction: column; gap: 18px; }
+    .install-step { display: flex; gap: 16px; align-items: flex-start; }
+    .step-num { background: var(--accent); color: #fff; font-family: "Consolas", ui-monospace, monospace; font-size: 13px; font-weight: 700; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; }
+    .step-text strong { display: block; font-size: 14.5px; margin-bottom: 2px; color: var(--ink); }
+    .step-text span { font-size: 13.5px; color: var(--dim); }
 
-    /* NAV STRIP */
-    .nav-strip { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 40px 24px; }
-    .nav-strip-inner { max-width: 1100px; margin: 0 auto; }
-    .nav-strip h3 { font-size: 16px; font-weight: 700; color: var(--text-dim); margin-bottom: 20px; letter-spacing: 1px; }
-    .project-links { display: flex; gap: 16px; flex-wrap: wrap; }
-    .project-link { display: flex; align-items: center; gap: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 20px; transition: border-color 0.2s, transform 0.15s; text-decoration: none; }
-    .project-link:hover { border-color: var(--accent-lt); transform: translateY(-1px); text-decoration: none; }
-    .project-link-icon { font-size: 22px; }
-    .project-link-text strong { display: block; font-size: 14px; color: var(--text); }
-    .project-link-text span { font-size: 12px; color: var(--text-dim); }
+    /* MORE FROM — syllabus cross-links */
+    .nav-strip { background: var(--panel); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 40px 22px; }
+    .nav-strip-inner { max-width: 1080px; margin: 0 auto; }
+    .nav-strip h3 { font-size: 11px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; color: var(--dim); margin-bottom: 18px; }
+    .project-links { display: flex; gap: 12px; flex-wrap: wrap; }
+    .project-link {
+      display: flex; align-items: center; gap: 12px; flex: 1 1 280px;
+      background: #ffffff; border: 1px solid var(--line); border-radius: 10px; padding: 13px 16px;
+      transition: background .12s, border-color .12s;
+    }
+    .project-link:hover { background: #eef4ff; border-color: #b6c8ee; }
+    .project-link-icon { font-size: 20px; }
+    .project-link-text strong { display: block; font-size: 14px; color: var(--ink); }
+    .project-link-text span { font-size: 12.5px; color: var(--dim); }
 
     /* FOOTER */
-    footer { border-top: 1px solid var(--border); padding: 48px 40px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
-    .footer-logo { font-family: var(--mono); font-weight: 700; font-size: 15px; color: var(--accent-lt); }
-    .footer-links { display: flex; gap: 24px; list-style: none; }
-    .footer-links a { color: var(--text-muted); font-size: 14px; transition: color 0.15s; }
-    .footer-links a:hover { color: var(--text); text-decoration: none; }
-    .footer-copy { font-size: 13px; color: var(--text-muted); }
+    footer { border-top: 1px solid var(--line); padding: 36px 22px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; max-width: 1080px; margin: 0 auto; }
+    .footer-logo { font-family: "Consolas", ui-monospace, monospace; font-weight: 700; font-size: 14px; color: var(--accent-d); }
+    .footer-links { display: flex; gap: 20px; list-style: none; }
+    .footer-links a { color: var(--dim); font-size: 13.5px; }
+    .footer-links a:hover { color: var(--accent-d); }
+    .footer-copy { font-size: 12.5px; color: var(--dim); }
 
     @media (max-width: 768px) {
-      nav { padding: 0 20px; }
+      .topbar { padding: 10px 16px; }
       .nav-links { display: none; }
+      .welcome-card { padding: 28px 20px; }
       .types-grid, .usecases-grid, .twoways-grid, .install-grid { grid-template-columns: 1fr; }
       footer { flex-direction: column; text-align: center; }
       .footer-links { justify-content: center; }
@@ -158,23 +199,29 @@
 </head>
 <body>
 
-<nav>
-  <span class="nav-logo">RecordForge</span>
-  <ul class="nav-links">
-    <li><a href="#file-types">File Types</a></li>
-    <li><a href="#use-cases">Use Cases</a></li>
-    <li><a href="#two-ways">App vs. Package</a></li>
-    <li><a href="#install">Install</a></li>
-    <li><a href="https://github.com/michaelnocito/recordforge" target="_blank">GitHub ↗</a></li>
-  </ul>
-  <a href="https://github.com/michaelnocito/recordforge/releases/latest" class="nav-cta">⬇ Download Free</a>
-</nav>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">▦</span>
+    <span class="brand-text">
+      <strong>RecordForge</strong>
+      <span class="sub">Realistic test files, zero real data</span>
+    </span>
+  </div>
+  <div class="orient">
+    <span class="phase-chip">Free · Offline</span>
+    <ul class="nav-links">
+      <li><a href="#file-types">File Types</a></li>
+      <li><a href="#use-cases">Use Cases</a></li>
+      <li><a href="#two-ways">App vs. Package</a></li>
+      <li><a href="#install">Install</a></li>
+    </ul>
+    <a href="https://github.com/michaelnocito/recordforge/releases/latest" class="nav-cta">⬇ Download Free</a>
+  </div>
+</header>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-grid"></div>
-  <div class="hero-glow"></div>
-  <div class="hero-content">
+  <div class="welcome-card">
     <div class="hero-eyebrow">Free · Windows App + Python Package</div>
     <h1>Realistic test files.<br/><span>Zero real data.</span></h1>
     <p class="hero-sub">
@@ -193,9 +240,9 @@
 </section>
 
 <!-- FILE TYPES -->
-<section class="types-bg" id="file-types">
+<section id="file-types">
   <div class="section-inner">
-    <div style="text-align:center; margin-bottom: 48px;">
+    <div style="text-align:center; margin-bottom: 40px;">
       <div class="section-label">What It Generates</div>
       <h2>Four formats. Dozens of document types.</h2>
       <p class="section-sub" style="margin: 0 auto;">Every output is fictional. Every field — name, address, amount — is randomized per file.</p>
@@ -248,7 +295,7 @@
 </section>
 
 <!-- USE CASES -->
-<section id="use-cases">
+<section id="use-cases" style="background: var(--panel); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
   <div class="section-inner">
     <div class="section-label">Use Cases</div>
     <h2>Built for the people who need fake data the most.</h2>
@@ -256,22 +303,22 @@
     <div class="usecases-grid">
       <div class="usecase-card">
         <div class="usecase-icon">🧪</div>
-        <h3>QA & Testing</h3>
+        <h3>QA &amp; Testing</h3>
         <p>Feed your pipelines, parsers, and validators a folder of realistic edge cases. Invoices with long names. Purchase orders with zero amounts. Contracts with weird formatting.</p>
       </div>
       <div class="usecase-card">
         <div class="usecase-icon">🎤</div>
-        <h3>Demos & Presentations</h3>
+        <h3>Demos &amp; Presentations</h3>
         <p>Stop blurring customer names in screenshots. Generate a folder of fictional but convincing documents before every demo. Looks real. Is completely safe to share.</p>
       </div>
       <div class="usecase-card">
         <div class="usecase-icon">🔁</div>
-        <h3>ETL & Data Engineering</h3>
+        <h3>ETL &amp; Data Engineering</h3>
         <p>Test your ingestion logic against controlled volumes. Generate 10 clean files, then 500 messy ones. Repeat until the pipeline breaks — that's the point.</p>
       </div>
       <div class="usecase-card">
         <div class="usecase-icon">🎓</div>
-        <h3>Training & Courses</h3>
+        <h3>Training &amp; Courses</h3>
         <p>Teaching Excel, SQL, or document processing? Generate a fresh batch of sample files for every class without ever touching real data.</p>
       </div>
       <div class="usecase-card">
@@ -281,7 +328,7 @@
       </div>
       <div class="usecase-card">
         <div class="usecase-icon">🔒</div>
-        <h3>Compliance & Privacy</h3>
+        <h3>Compliance &amp; Privacy</h3>
         <p>When you can't use real data — HIPAA, GDPR, SOC 2 — but you need realistic data to test against, RecordForge fills the gap with zero legal exposure.</p>
       </div>
     </div>
@@ -289,9 +336,9 @@
 </section>
 
 <!-- TWO WAYS -->
-<section class="twoways-bg" id="two-ways">
+<section id="two-ways">
   <div class="section-inner">
-    <div style="text-align:center; margin-bottom: 48px;">
+    <div style="text-align:center; margin-bottom: 40px;">
       <div class="section-label">Two Ways to Use It</div>
       <h2>Pick your workflow.</h2>
       <p class="section-sub" style="margin: 0 auto;">Both produce the same files. Use whatever fits how you work.</p>
@@ -299,7 +346,7 @@
     <div class="twoways-grid">
       <div class="way-card">
         <div class="way-header">
-          <div class="way-tag app-tag">WINDOWS APP</div>
+          <div class="way-tag app-tag">Windows App</div>
           <h3>Desktop Installer</h3>
           <p class="way-sub">No Python required · 3-step wizard · runs offline</p>
         </div>
@@ -318,7 +365,7 @@
       </div>
       <div class="way-card">
         <div class="way-header">
-          <div class="way-tag pkg-tag">PYTHON PACKAGE</div>
+          <div class="way-tag pkg-tag">Python Package</div>
           <h3>pip install recordforge</h3>
           <p class="way-sub">CLI + Python API · scriptable · cross-platform</p>
         </div>
@@ -344,7 +391,7 @@
 </section>
 
 <!-- INSTALL -->
-<section id="install">
+<section id="install" style="background: var(--panel); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
   <div class="section-inner">
     <div class="install-grid">
       <div>
@@ -391,7 +438,7 @@
           <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-text">--format pdf \</span></div>
           <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-text">--output ./test-files/</span></div>
           <br/>
-          <div style="color: #22c55e;">✔  20 files generated. No real data used.</div>
+          <div style="color: #57d977;">✔  20 files generated. No real data used.</div>
         </div>
       </div>
     </div>
@@ -401,7 +448,7 @@
 <!-- OTHER PROJECTS -->
 <div class="nav-strip">
   <div class="nav-strip-inner">
-    <h3>MORE FROM MICHAEL NOCITO</h3>
+    <h3>More from Michael Nocito</h3>
     <div class="project-links">
       <a href="https://michaelnocito.github.io/nexus-sql-mystery/" class="project-link">
         <div class="project-link-icon">🕵️</div>
@@ -437,7 +484,7 @@
     <li><a href="https://www.linkedin.com/in/michaelnocito" target="_blank">LinkedIn</a></li>
     <li><a href="https://buymeacoffee.com/michaelnocito" target="_blank">Buy Me a Coffee ☕</a></li>
   </ul>
-  <div class="footer-copy">Free & open source · MIT License</div>
+  <div class="footer-copy">Free &amp; open source · MIT License</div>
 </footer>
 
 </body>
