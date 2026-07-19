@@ -22,18 +22,18 @@
   <style>
     /* =======================================================================
        RecordForge — docs landing
-       Re-skinned to the Nocito calm-analyst design system (light theme,
-       system fonts, blue accent). Green kept as the semantic success accent.
+       Re-skinned to the Zinc & Sky design system (light theme,
+       system fonts, deep-cyan accent). Emerald kept as the semantic success accent.
        Code/terminal blocks stay dark — literal CLI output.
        ======================================================================= */
     :root {
-      --bg:#eef1f5; --panel:#ffffff; --line:#d6dce4;
+      --bg:#F5F7F8; --panel:#ffffff; --line:#E4E7EA;
       --shadow:0 1px 2px rgba(20,30,50,.06), 0 6px 20px rgba(20,30,50,.06);
-      --ink:#1f2328; --dim:#5b6470;
-      --accent:#2f6df0; --accent-d:#1f4fc4;
-      --good:#1a7f37; --good-bg:#e7f6ec; --warm:#9a6700;
-      --tint:#f7faff; --tint-bd:#dde6f5;
-      --accent-soft:#eef4ff; --accent-soft-bd:#d4e1ff;
+      --ink:#09090B; --dim:#52525B;
+      --accent:#0E7490; --accent-d:#155E6E;
+      --good:#047857; --good-bg:#ECFDF5; --warm:#B45309;
+      --tint:#F4FAFB; --tint-bd:#C7EDF4;
+      --accent-soft:#E0F5F9; --accent-soft-bd:#A5E1ED;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
@@ -73,7 +73,7 @@
     .nav-cta {
       background: var(--accent); color: #fff !important; padding: 9px 18px; border-radius: 10px;
       font-weight: 700; font-size: 13.5px;
-      box-shadow: 0 2px 8px rgba(47,109,240,.35); transition: background .15s;
+      box-shadow: 0 2px 8px rgba(14,116,144,.35); transition: background .15s;
     }
     .nav-cta:hover { background: var(--accent-d); color: #fff !important; }
 
@@ -113,7 +113,7 @@
       display: inline-flex; align-items: center; gap: 8px;
       background: var(--accent); color: #fff; font-weight: 700; font-size: 15px;
       padding: 12px 28px; border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(47,109,240,.35); transition: background .15s, transform .05s;
+      box-shadow: 0 2px 8px rgba(14,116,144,.35); transition: background .15s, transform .05s;
     }
     .btn-primary:hover { background: var(--accent-d); color: #fff; transform: translateY(-1px); }
     .btn-secondary {
@@ -132,7 +132,7 @@
     .type-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; color: var(--ink); }
     .type-card p { font-size: 13px; color: var(--dim); line-height: 1.6; }
     .type-examples { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 12px; }
-    .type-ex { font-size: 11px; font-weight: 600; color: var(--dim); background: #f3f5f8; border: 1px solid var(--line); padding: 3px 9px; border-radius: 999px; }
+    .type-ex { font-size: 11px; font-weight: 600; color: var(--dim); background: #F1F3F5; border: 1px solid var(--line); padding: 3px 9px; border-radius: 999px; }
 
     .usecases-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
     .usecase-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 24px 22px; transition: transform .18s, box-shadow .18s; }
@@ -146,7 +146,7 @@
     .way-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; }
     .way-header { padding: 24px 28px 18px; border-bottom: 1px solid var(--line); }
     .way-tag { font-size: 11px; font-weight: 800; letter-spacing: .07em; padding: 4px 11px; border-radius: 999px; margin-bottom: 14px; display: inline-block; text-transform: uppercase; }
-    .app-tag { background: #eaf3ee; color: var(--good); border: 1px solid #bfe5ca; }
+    .app-tag { background: #ECFDF5; color: var(--good); border: 1px solid #A7F3D0; }
     .pkg-tag { background: var(--accent-soft); color: var(--accent-d); border: 1px solid var(--accent-soft-bd); }
     .way-card h3 { font-size: 19px; font-weight: 700; margin-bottom: 6px; color: var(--ink); }
     .way-card .way-sub { font-size: 13.5px; color: var(--dim); }
@@ -182,7 +182,7 @@
       background: #ffffff; border: 1px solid var(--line); border-radius: 10px; padding: 13px 16px;
       transition: background .12s, border-color .12s;
     }
-    .project-link:hover { background: #eef4ff; border-color: #b6c8ee; }
+    .project-link:hover { background: #E0F5F9; border-color: #A5E1ED; }
     .project-link-icon { font-size: 20px; }
     .project-link-text strong { display: block; font-size: 14px; color: var(--ink); }
     .project-link-text span { font-size: 12.5px; color: var(--dim); }
