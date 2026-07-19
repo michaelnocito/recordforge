@@ -446,6 +446,90 @@ def test_cli_parse_dirty():
         _parse_dirty("nulls")
 
 
+# --- Relational bundle (referential integrity) ---
+
+def test_build_related_has_no_orphan_foreign_keys():
+    from recordforge.generators.related import build_related
+    data = build_related(_fresh_rng(), {"customers": 30, "transactions": 120, "payments": 80})
+    customer_ids = {c["customer_id"] for c in data["customers"]}
+    txn_ids = {t["txn_id"] for t in data["transactions"]}
+    assert len(data["customers"]) == 30
+    assert len(data["transactions"]) == 120
+    assert len(data["payments"]) == 80
+    # every child key references a real parent
+    assert all(t["customer_id"] in customer_ids for t in data["transactions"])
+    assert all(p["customer_id"] in customer_ids for p in data["payments"])
+    assert all(p["txn_id"] in txn_ids for p in data["payments"])
+
+
+def test_build_related_payment_chain_is_consistent():
+    from recordforge.generators.related import build_related
+    data = build_related(_fresh_rng(), {"customers": 20, "transactions": 60, "payments": 40})
+    txn_by_id = {t["txn_id"]: t for t in data["transactions"]}
+    cust_by_id = {c["customer_id"]: c for c in data["customers"]}
+    for pay in data["payments"]:
+        txn = txn_by_id[pay["txn_id"]]
+        # payment inherits the transaction's customer, amount, and currency
+        assert pay["customer_id"] == txn["customer_id"]
+        assert pay["amount"] == txn["amount"]
+        assert pay["currency"] == txn["currency"]
+        assert pay["account_holder"] == cust_by_id[pay["customer_id"]]["name"]
+
+
+def test_build_related_defaults_and_clamps():
+    from recordforge.generators.related import DEFAULT_COUNTS, build_related
+    data = build_related(_fresh_rng())  # no spec -> defaults
+    assert len(data["customers"]) == DEFAULT_COUNTS["customers"]
+    clamped = build_related(_fresh_rng(), {"customers": 0, "transactions": -5, "payments": 3})
+    assert len(clamped["customers"]) == 1  # counts clamp up to at least 1
+    assert len(clamped["transactions"]) == 1
+
+
+def test_generate_related_writes_three_datasets(tmp_path: Path):
+    import csv as _csv
+    import recordforge as rf
+    docs = rf.generate_related(
+        output=tmp_path, format="csv", seed=7,
+        customers=25, transactions=90, payments=50,
+    )
+    assert len(docs) == 3
+    by_type = {d.doc_type: d for d in docs}
+    assert set(by_type) == {"customers", "transactions", "payments"}
+    for doc in docs:
+        assert doc.path.exists() and doc.path.stat().st_size > 0
+    # re-load and re-check FK integrity end to end through the CSV renderer
+    customer_ids = {r["customer_id"] for r in _csv.DictReader(by_type["customers"].path.open(encoding="utf-8"))}
+    txns = list(_csv.DictReader(by_type["transactions"].path.open(encoding="utf-8")))
+    assert all(t["customer_id"] in customer_ids for t in txns)
+
+
+def test_generate_related_is_reproducible(tmp_path: Path):
+    import recordforge as rf
+    a = rf.generate_related(output=tmp_path / "a", format="jsonl", seed=11, customers=10, transactions=40, payments=20)
+    b = rf.generate_related(output=tmp_path / "b", format="jsonl", seed=11, customers=10, transactions=40, payments=20)
+    a_by = {d.doc_type: d.path.read_text(encoding="utf-8") for d in a}
+    b_by = {d.doc_type: d.path.read_text(encoding="utf-8") for d in b}
+    assert a_by == b_by
+
+
+def test_generate_related_rejects_bad_format(tmp_path: Path):
+    import recordforge as rf
+    with pytest.raises(ValueError):
+        rf.generate_related(output=tmp_path, format="pdf")
+
+
+def test_cli_generate_related(tmp_path: Path):
+    from typer.testing import CliRunner
+    from recordforge.cli import app
+    result = CliRunner().invoke(app, [
+        "generate-related", "--format", "json", "--output", str(tmp_path),
+        "--customers", "15", "--transactions", "40", "--payments", "20", "--seed", "2",
+    ])
+    assert result.exit_code == 0
+    assert "Generated 3 linked dataset(s)." in result.stdout
+    assert len(list(tmp_path.glob("*.json"))) == 3
+
+
 # --- Seed reproducibility ---
 
 def test_same_seed_same_doc_number():

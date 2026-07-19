@@ -6,6 +6,21 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Referential integrity — relational bundle (Phase C, slice C1)
+
+- New `generators/related.py` builds **customers, transactions, and payments in
+  one pass with real foreign keys**: every `transactions.customer_id` is drawn
+  from the generated `customers.customer_id` pool, and every payment settles a
+  real transaction (inheriting its `txn_id`, `customer_id`, `amount`, and
+  `currency`, and naming the matching customer as `account_holder`). Parents are
+  built before children, so the output never contains an orphan foreign key
+- New public API `generate_related(output, format, seed, customers,
+  transactions, payments)` renders each dataset to a chosen data format in
+  dependency order; returns one `GeneratedDoc` per dataset
+- New CLI `recordforge generate-related --format csv --customers 100
+  --transactions 500 --payments 200 [--seed N] [--output DIR]`
+- Deterministic under a seed and fully offline, like every other generator
+
 ### Fixed
 - XLSX renderer no longer crashes on control characters (e.g. the `edge_cases`
   null-byte value): characters Excel cannot store are escaped to their `\xNN`

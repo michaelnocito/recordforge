@@ -60,6 +60,32 @@ def generate(
         raise typer.Exit(1)
 
 
+@app.command(name="generate-related")
+def generate_related(
+    format: str = typer.Option("csv", "--format", help="Data format: xlsx | csv | json | jsonl"),
+    customers: int = typer.Option(100, "--customers", help="Number of customer rows"),
+    transactions: int = typer.Option(500, "--transactions", help="Number of transaction rows"),
+    payments: int = typer.Option(200, "--payments", help="Number of payment rows"),
+    output: Optional[Path] = typer.Option(None, "--output", help="Output directory"),
+    seed: Optional[int] = typer.Option(None, "--seed", help="Integer seed for reproducible output"),
+) -> None:
+    """Generate a relational bundle (customers, transactions, payments) with real
+    foreign keys, one file per dataset."""
+    import recordforge as rf
+
+    try:
+        docs = rf.generate_related(
+            output=output, format=format, seed=seed,
+            customers=customers, transactions=transactions, payments=payments,
+        )
+        for doc in docs:
+            typer.echo(str(doc.path))
+        typer.echo(f"\nGenerated {len(docs)} linked dataset(s).")
+    except ValueError as exc:
+        typer.echo(f"Error: {exc}", err=True)
+        raise typer.Exit(1)
+
+
 @app.command(name="list-types")
 def list_types() -> None:
     """Print all available document and data type keys."""

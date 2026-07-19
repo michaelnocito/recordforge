@@ -86,6 +86,58 @@ def generate(
     return results
 
 
+def generate_related(
+    output: str | Path | None = None,
+    format: str = "csv",
+    seed: int | None = None,
+    customers: int = 100,
+    transactions: int = 500,
+    payments: int = 200,
+) -> list[GeneratedDoc]:
+    """Generate a relational bundle: customers, transactions, and payments with
+    real foreign keys, rendered to one data ``format`` each.
+
+    ``transactions.customer_id`` is always drawn from the generated
+    ``customers.customer_id`` pool, and every payment settles a real
+    transaction, so the output joins with no orphan keys. Files are written in
+    dependency order (customers, then transactions, then payments). Returns a
+    list of GeneratedDoc instances, one per dataset. Raises ValueError for an
+    invalid data format.
+    """
+    from recordforge.core.seed import get_rng, set_seed as _set_seed
+    from recordforge.generators.related import RELATED_DATASETS, build_related
+    from recordforge.renderers import csv as csv_r, json as json_r, jsonl as jsonl_r, xlsx
+
+    if format not in DATA_FORMATS:
+        raise ValueError(
+            f"Format '{format}' is not valid for relational bundles. Use xlsx, csv, json, or jsonl."
+        )
+
+    if seed is not None:
+        _set_seed(seed)
+
+    rng = get_rng()
+    out_dir = Path(output) if output else Path.home() / "Documents" / "recordforge"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    spec = {
+        "customers": max(1, min(customers, MAX_ROWS)),
+        "transactions": max(1, min(transactions, MAX_ROWS)),
+        "payments": max(1, min(payments, MAX_ROWS)),
+    }
+    datasets = build_related(rng, spec)
+
+    _data_renderers = {
+        "xlsx": xlsx.render,
+        "csv": csv_r.render,
+        "json": json_r.render,
+        "jsonl": jsonl_r.render,
+    }
+    renderer = _data_renderers[format]
+
+    return [renderer(name, datasets[name], out_dir) for name in RELATED_DATASETS]
+
+
 def list_types() -> dict[str, list[str]]:
     """Return all available type keys grouped by category."""
     from recordforge.generators.data import DATA_REGISTRY
@@ -97,4 +149,4 @@ def list_types() -> dict[str, list[str]]:
     }
 
 
-__all__ = ["generate", "list_types", "set_seed", "GeneratedDoc", "__version__"]
+__all__ = ["generate", "generate_related", "list_types", "set_seed", "GeneratedDoc", "__version__"]
