@@ -6,6 +6,11 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Fixed
+- XLSX renderer no longer crashes on control characters (e.g. the `edge_cases`
+  null-byte value): characters Excel cannot store are escaped to their `\xNN`
+  text form. CSV/JSON keep the raw bytes.
+
 ### Data Forge — checksum-valid identifiers (Phase B)
 
 - New checksum helpers in `core/faker_utils.py`: `rand_card` (Luhn-valid card

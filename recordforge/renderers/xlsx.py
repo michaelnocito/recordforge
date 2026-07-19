@@ -8,12 +8,25 @@ import secrets
 from pathlib import Path
 
 from openpyxl import Workbook
+from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 from openpyxl.styles import Font, PatternFill
 
 from recordforge.core.faker_utils import sanitize_filename
 from recordforge.core.models import GeneratedDoc
 
 DISCLAIMER = "FICTIONAL TEST DATA ONLY - generated for testing, demo, or training use."
+
+
+def _xlsx_safe(value: object) -> object:
+    """Escape control characters Excel cannot store (e.g. NUL, bell).
+
+    XLSX physically cannot hold these bytes, so edge-case values that contain
+    them (null byte, control chars) are rendered as their escaped text form
+    (``\\x00``) instead of crashing the writer. CSV/JSON keep the raw bytes.
+    """
+    if isinstance(value, str):
+        return ILLEGAL_CHARACTERS_RE.sub(lambda m: f"\\x{ord(m.group()):02x}", value)
+    return value
 
 
 def render(dataset: str, rows: list[dict], output_dir: Path) -> GeneratedDoc:
@@ -37,7 +50,7 @@ def render(dataset: str, rows: list[dict], output_dir: Path) -> GeneratedDoc:
         cell.fill = fill
 
     for row in rows:
-        ws.append([row.get(h) for h in headers])
+        ws.append([_xlsx_safe(row.get(h)) for h in headers])
 
     for col_cells in ws.columns:
         max_len = 0

@@ -369,6 +369,23 @@ def test_edge_cases_are_stable():
     assert build_rows(random.Random(1), 30) == build_rows(random.Random(999), 30)
 
 
+def test_edge_cases_xlsx_handles_control_chars(tmp_path: Path):
+    """Regression: openpyxl rejects control chars; the renderer must escape them."""
+    import openpyxl
+    import recordforge as rf
+    doc = rf.generate(type="edge_cases", format="xlsx", rows=200, seed=1, output=tmp_path)[0]
+    ws = openpyxl.load_workbook(doc.path).active  # must open without IllegalCharacterError
+    assert ws.max_row > 200
+
+
+def test_xlsx_escapes_null_byte(tmp_path: Path):
+    import openpyxl
+    from recordforge.renderers.xlsx import render
+    doc = render("t", [{"a": "x\x00y"}], tmp_path)
+    ws = openpyxl.load_workbook(doc.path).active
+    assert ws.cell(3, 1).value == "x\\x00y"
+
+
 # --- Dirtying engine ---
 
 def _clean_rows(n=20):
