@@ -113,7 +113,7 @@ body{margin:0;font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;b
             <label class="type-card" id="tc-messy"><input type="checkbox" value="messy" onchange="updateTypeCard('tc-messy',this)"><div><div>&#129302; Messy Data</div><div style="color:#7a7168;font-size:11px">Nulls, dupes, bad formatting &#8212; Excel (.xlsx)</div></div></label>
             <label class="type-card" id="tc-inventory"><input type="checkbox" value="inventory" onchange="updateTypeCard('tc-inventory',this)"><div><div>&#128230; Inventory</div><div style="color:#7a7168;font-size:11px">Excel (.xlsx) dataset</div></div></label>
           </div>
-          <p style="font-size:11px;color:#37506b;margin-top:10px">Data selections always generate Excel (.xlsx) automatically. No format dropdown needed.</p>
+          <p style="font-size:11px;color:#37506b;margin-top:10px">Pick the data format (Excel, CSV, JSON, or JSONL) and rows per file in Step 2.</p>
         </div>
       </div>
       <div class="wizard-footer">
@@ -127,7 +127,7 @@ body{margin:0;font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;b
       <div class="wizard-header">
         <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:#c27a3a;margin-bottom:4px">Step 2 of 3</div>
         <h2 style="margin:0 0 6px;font-size:20px">Output settings</h2>
-        <p style="font-size:13px;color:#7a7168;margin:0">Set quantity, document format, and output folder. Data sets always export to Excel (.xlsx).</p>
+        <p style="font-size:13px;color:#7a7168;margin:0">Set quantity, formats, rows per data file, and output folder.</p>
       </div>
       <div class="wizard-body">
         <div class="field">
@@ -139,7 +139,7 @@ body{margin:0;font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;b
             <span style="font-size:11px;color:#7a7168;margin-left:4px">per selected type</span>
           </div>
         </div>
-        <div class="field">
+        <div class="field" id="docFormatField">
           <label>Document format</label>
           <div class="select-wrap">
             <select id="exportFormat">
@@ -148,6 +148,22 @@ body{margin:0;font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;b
               <option value="docx">Word .docx</option>
               <option value="html">HTML</option>
             </select>
+          </div>
+        </div>
+        <div class="field" id="dataSettingsField" style="display:none">
+          <label>Data format &amp; size</label>
+          <div class="select-wrap">
+            <select id="dataFormat">
+              <option value="xlsx" selected>Excel .xlsx</option>
+              <option value="csv">CSV</option>
+              <option value="json">JSON</option>
+              <option value="jsonl">JSONL / NDJSON</option>
+            </select>
+          </div>
+          <div class="qty-row" style="margin-top:10px">
+            <label style="margin:0 8px 0 0;font-size:12px">Rows per file</label>
+            <input type="number" id="rowsPerFile" value="50" min="1" max="100000"
+                   style="width:96px;padding:6px 8px;border:1px solid #e0d9ce;border-radius:8px;font-size:13px">
           </div>
         </div>
         <div class="field">
@@ -205,6 +221,8 @@ function selectMode(mode){
   const showData = mode === 'data' || mode === 'both';
   document.getElementById('docTypePanel').style.display = showDocs ? '' : 'none';
   document.getElementById('dataTypePanel').style.display = showData ? '' : 'none';
+  document.getElementById('docFormatField').style.display = showDocs ? '' : 'none';
+  document.getElementById('dataSettingsField').style.display = showData ? '' : 'none';
 }
 function updateTypeCard(id, cb){ document.getElementById(id).classList.toggle('selected', cb.checked); }
 function adjustQty(delta){ qty = Math.max(1, Math.min(20, qty + delta)); document.getElementById('qtyVal').textContent = qty; }
@@ -241,12 +259,15 @@ function buildReview(){
   const hasDocs = types.some(t=>DOC_TYPES.includes(t)) && (selectedMode==='documents' || selectedMode==='both');
   const docFormat = hasDocs ? (format || 'Choose one…') : 'Not needed (data only)';
   const hasData = types.some(t=>DATA_TYPES.includes(t)) && (selectedMode==='data' || selectedMode==='both');
+  const dataFormat = document.getElementById('dataFormat').value;
+  const rowsPerFile = document.getElementById('rowsPerFile').value || '50';
+  const dataOutput = hasData ? `${dataFormat.toUpperCase()}, ${rowsPerFile} rows/file` : 'None';
   const rows = [
     ['Mode', selectedMode.charAt(0).toUpperCase()+selectedMode.slice(1)],
     ['Types', types.length ? types.join(', ') : 'None'],
     ['Quantity', qty + ' per type'],
     ['Document format', docFormat],
-    ['Data output', hasData ? 'Excel (.xlsx) automatic' : 'None'],
+    ['Data output', dataOutput],
     ['Org / Parties', 'Random fictional data'],
     ['Output folder', document.getElementById('folderPath').textContent],
     ['Total files', '~'+(types.length*qty)]
@@ -281,6 +302,8 @@ function generate(){
     quantity: qty,
     outputFolder: document.getElementById('folderPath').textContent,
     format: format,
+    dataFormat: document.getElementById('dataFormat').value,
+    rows: parseInt(document.getElementById('rowsPerFile').value, 10) || 50,
     mode: selectedMode
   };
 

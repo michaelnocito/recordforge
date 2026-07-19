@@ -4,6 +4,29 @@ All notable changes to this project are documented here.
 
 ---
 
+## [Unreleased]
+
+### Data Forge — formats and row control (Phase B)
+
+**Data output formats**
+- Data types now export to **CSV, JSON, and JSONL** in addition to Excel `.xlsx`
+- New renderers: `renderers/csv.py`, `renderers/json.py`, `renderers/jsonl.py`
+- Output is clean and directly loadable (no injected disclaimer rows that would
+  break parsing); None values and Decimals serialize safely
+
+**Rows per file**
+- New `rows` parameter on `generate()` controls records per data file
+  (previously fixed at ~50); clamped 1–1,000,000
+- CLI: new `--rows` option
+- Desktop app: data format selector (Excel / CSV / JSON / JSONL) and a
+  "Rows per file" input in Step 2, shown for data and both modes
+
+**Tests**
+- 29 smoke tests (up from 21): new-format round-trips, row-count control,
+  format validation, and cross-format seed reproducibility
+
+---
+
 ## [2.0.0] — 2026-05-18
 
 ### RecordForge — full refactor and rename
@@ -85,7 +108,11 @@ All notable changes to this project are documented here.
 
 ## Upcoming
 
-- Additional document types (NDA, SOW, Work Order, bank statement)
-- Scan simulation / OCR noise mode
-- Configurable row count for data sets
-- Schema import (custom templates via JSON/YAML)
+See `ROADMAP.md` for the full plan. Near-term (Phase B/C):
+
+- A-la-carte "dirty data" menu: choose which errors to inject and at what rate
+- Edge-case corpus (naughty strings, boundary values, unicode, injection)
+- Checksum-valid identifiers (Luhn card numbers, mod-97 IBANs)
+- Schema files + referential integrity across datasets (foreign keys that join)
+- SQL INSERT and Parquet output
+- Additional document types (bank statement, pay stub, remittance, W-2/1099)

@@ -129,7 +129,7 @@ When ready, replace this comment with:
 - Contract
 - Offer Letter
 
-**Data files** (Excel `.xlsx`)
+**Data files** (Excel `.xlsx` / CSV / JSON / JSONL, with a configurable number of rows per file)
 
 - Customer Records
 - Vendor Master
@@ -171,9 +171,13 @@ pip install -e .
 
 ```
 recordforge generate --type invoice --format pdf --count 5
-recordforge generate --type customers --format xlsx --count 2
+recordforge generate --type customers --format csv --rows 500
+recordforge generate --type transactions --format jsonl --rows 10000 --seed 42
 recordforge list-types
 ```
+
+Data types accept `--format xlsx | csv | json | jsonl` and `--rows` (records per
+file). Document types accept `--format pdf | docx | html`.
 
 **Python API:**
 

@@ -87,6 +87,8 @@ class API:
             selected = payload.get("docTypes", [])
             qty = max(1, int(payload.get("quantity", 1)))
             fmt = (payload.get("format") or "").lower().strip()
+            data_fmt = (payload.get("dataFormat") or "xlsx").lower().strip()
+            rows = max(1, int(payload.get("rows", 50)))
             out_folder = (
                 payload.get("outputFolder")
                 or str(Path.home() / "Documents" / "recordforge")
@@ -112,8 +114,12 @@ class API:
                     generated_files.extend(str(d.path) for d in docs)
 
             if wants_data:
+                if data_fmt not in {"xlsx", "csv", "json", "jsonl"}:
+                    raise ValueError("Choose a data format (xlsx, csv, json, or jsonl).")
                 for dataset in data_keys:
-                    docs = rf.generate(type=dataset, format="xlsx", count=qty, output=out_folder)
+                    docs = rf.generate(
+                        type=dataset, format=data_fmt, count=qty, output=out_folder, rows=rows
+                    )
                     generated_files.extend(str(d.path) for d in docs)
 
             return {"success": True, "files": generated_files, "folder": str(out_dir)}

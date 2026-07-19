@@ -185,6 +185,81 @@ def test_pdf_contains_sample_watermark(tmp_path: Path):
     assert b"/ca .15" in raw
 
 
+# --- Data renderers: csv / json / jsonl ---
+
+def test_csv_renderer_roundtrips(tmp_path: Path):
+    import csv as _csv
+    from recordforge.generators.data.customers import build_rows
+    from recordforge.renderers.csv import render
+    rows = build_rows(_fresh_rng(), count=8)
+    doc = render("customers", rows, tmp_path)
+    assert doc.format == "csv" and doc.path.suffix == ".csv"
+    read = list(_csv.DictReader(doc.path.open(encoding="utf-8")))
+    assert len(read) == 8
+    assert read[0]["customer_id"] == "CUST-1000"
+
+
+def test_json_renderer_is_valid_array(tmp_path: Path):
+    import json as _json
+    from recordforge.generators.data.customers import build_rows
+    from recordforge.renderers.json import render
+    rows = build_rows(_fresh_rng(), count=6)
+    doc = render("customers", rows, tmp_path)
+    data = _json.loads(doc.path.read_text(encoding="utf-8"))
+    assert isinstance(data, list) and len(data) == 6
+
+
+def test_jsonl_renderer_one_object_per_line(tmp_path: Path):
+    import json as _json
+    from recordforge.generators.data.customers import build_rows
+    from recordforge.renderers.jsonl import render
+    rows = build_rows(_fresh_rng(), count=7)
+    doc = render("customers", rows, tmp_path)
+    lines = [ln for ln in doc.path.read_text(encoding="utf-8").splitlines() if ln]
+    assert len(lines) == 7
+    assert all(isinstance(_json.loads(ln), dict) for ln in lines)
+
+
+def test_messy_none_serializes_in_csv_and_json(tmp_path: Path):
+    import json as _json
+    from recordforge.generators.data.messy import build_rows
+    from recordforge.renderers.csv import render as render_csv
+    from recordforge.renderers.json import render as render_json
+    rows = build_rows(_fresh_rng(), count=10)
+    csv_doc = render_csv("messy", rows, tmp_path)
+    json_doc = render_json("messy", rows, tmp_path)
+    assert csv_doc.path.stat().st_size > 0
+    assert len(_json.loads(json_doc.path.read_text(encoding="utf-8"))) == 10
+
+
+# --- API: rows control and format validation ---
+
+def test_generate_rows_controls_row_count(tmp_path: Path):
+    import json as _json
+    import recordforge as rf
+    doc = rf.generate(type="customers", format="json", count=1, output=tmp_path, rows=17)[0]
+    assert len(_json.loads(doc.path.read_text(encoding="utf-8"))) == 17
+
+
+def test_generate_rejects_bad_data_format(tmp_path: Path):
+    import recordforge as rf
+    with pytest.raises(ValueError):
+        rf.generate(type="customers", format="pdf", output=tmp_path)
+
+
+def test_generate_rejects_data_format_on_documents(tmp_path: Path):
+    import recordforge as rf
+    with pytest.raises(ValueError):
+        rf.generate(type="invoice", format="csv", output=tmp_path)
+
+
+def test_generate_data_formats_are_reproducible(tmp_path: Path):
+    import recordforge as rf
+    a = rf.generate(type="customers", format="jsonl", output=tmp_path, seed=5, rows=12)[0]
+    b = rf.generate(type="customers", format="jsonl", output=tmp_path, seed=5, rows=12)[0]
+    assert a.path.read_text(encoding="utf-8") == b.path.read_text(encoding="utf-8")
+
+
 # --- Seed reproducibility ---
 
 def test_same_seed_same_doc_number():

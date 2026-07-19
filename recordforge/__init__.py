@@ -8,22 +8,31 @@ from recordforge.core.seed import set_seed
 __version__ = "2.0.0"
 
 
+DATA_FORMATS = ("xlsx", "csv", "json", "jsonl")
+DOCUMENT_FORMATS = ("pdf", "docx", "html")
+
+MAX_ROWS = 1_000_000
+
+
 def generate(
     type: str,
     format: str,
     count: int = 1,
     output: str | Path | None = None,
     seed: int | None = None,
+    rows: int = 50,
 ) -> list[GeneratedDoc]:
     """Generate synthetic documents or data files.
 
-    Returns a list of GeneratedDoc instances, one per file created.
-    Raises ValueError for invalid type/format combinations.
+    ``count`` is the number of files. ``rows`` is the number of records per
+    data file (ignored for document types). Returns a list of GeneratedDoc
+    instances, one per file created. Raises ValueError for invalid
+    type/format combinations.
     """
     from recordforge.core.seed import get_rng, set_seed as _set_seed
     from recordforge.generators.data import DATA_REGISTRY
     from recordforge.generators.documents import DOCUMENT_REGISTRY
-    from recordforge.renderers import docx, html, pdf, xlsx
+    from recordforge.renderers import csv as csv_r, docx, html, json as json_r, jsonl as jsonl_r, pdf, xlsx
 
     if seed is not None:
         _set_seed(seed)
@@ -32,11 +41,12 @@ def generate(
     out_dir = Path(output) if output else Path.home() / "Documents" / "recordforge"
     out_dir.mkdir(parents=True, exist_ok=True)
     count = max(1, min(count, 100))
+    rows = max(1, min(rows, MAX_ROWS))
 
     results: list[GeneratedDoc] = []
 
     if type in DOCUMENT_REGISTRY:
-        if format not in {"pdf", "docx", "html"}:
+        if format not in DOCUMENT_FORMATS:
             raise ValueError(
                 f"Format '{format}' is not valid for document types. Use pdf, docx, or html."
             )
@@ -47,13 +57,20 @@ def generate(
             results.append(renderer(builder(rng), out_dir))
 
     elif type in DATA_REGISTRY:
-        if format != "xlsx":
+        if format not in DATA_FORMATS:
             raise ValueError(
-                f"Format '{format}' is not valid for data types. Use xlsx."
+                f"Format '{format}' is not valid for data types. Use xlsx, csv, json, or jsonl."
             )
+        _data_renderers = {
+            "xlsx": xlsx.render,
+            "csv": csv_r.render,
+            "json": json_r.render,
+            "jsonl": jsonl_r.render,
+        }
         builder = DATA_REGISTRY[type]
+        renderer = _data_renderers[format]
         for _ in range(count):
-            results.append(xlsx.render(type, builder(rng), out_dir))
+            results.append(renderer(type, builder(rng, rows), out_dir))
 
     else:
         valid = sorted(DOCUMENT_REGISTRY) + sorted(DATA_REGISTRY)

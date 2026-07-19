@@ -13,8 +13,11 @@ app = typer.Typer(name="recordforge", help="Generate synthetic documents and dat
 @app.command()
 def generate(
     type: str = typer.Option(..., "--type", help="Document or data type key"),
-    format: str = typer.Option(..., "--format", help="Output format: pdf | docx | html | xlsx"),
+    format: str = typer.Option(
+        ..., "--format", help="Documents: pdf | docx | html.  Data: xlsx | csv | json | jsonl"
+    ),
     count: int = typer.Option(1, "--count", help="Number of files to generate (1–100)"),
+    rows: int = typer.Option(50, "--rows", help="Rows per data file (ignored for documents)"),
     output: Optional[Path] = typer.Option(None, "--output", help="Output directory"),
     seed: Optional[int] = typer.Option(None, "--seed", help="Integer seed for reproducible output"),
 ) -> None:
@@ -22,7 +25,9 @@ def generate(
     import recordforge as rf
 
     try:
-        docs = rf.generate(type=type, format=format, count=count, output=output, seed=seed)
+        docs = rf.generate(
+            type=type, format=format, count=count, output=output, seed=seed, rows=rows
+        )
         for doc in docs:
             typer.echo(str(doc.path))
         typer.echo(f"\nGenerated {len(docs)} file(s).")
