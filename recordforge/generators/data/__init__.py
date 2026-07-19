@@ -9,6 +9,7 @@ from recordforge.generators.data.edge_cases import build_rows as build_edge_case
 from recordforge.generators.data.employees import build_rows as build_employees
 from recordforge.generators.data.inventory import build_rows as build_inventory
 from recordforge.generators.data.messy import build_rows as build_messy
+from recordforge.generators.data.payments import build_rows as build_payments
 from recordforge.generators.data.transactions import build_rows as build_transactions
 from recordforge.generators.data.vendors import build_rows as build_vendors
 
@@ -18,6 +19,7 @@ DATA_REGISTRY: dict[str, callable] = {
     "transactions": build_transactions,
     "employees": build_employees,
     "inventory": build_inventory,
+    "payments": build_payments,
     "messy": build_messy,
     "edge_cases": build_edge_cases,
 }

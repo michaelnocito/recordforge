@@ -6,6 +6,7 @@ random globals.
 
 import random
 import secrets
+import string
 from datetime import date, timedelta
 from decimal import Decimal
 from typing import Literal
@@ -210,3 +211,81 @@ def rand_line_items(
             unit_price = Decimal(rng.randint(500, 8000))
         items.append(LineItem(description=desc, quantity=qty, unit_price=unit_price))
     return items
+
+
+# --- Checksum-valid identifiers ---
+#
+# These pass the standard format checks (Luhn / IBAN mod-97 / ABA) so they
+# survive validators in test pipelines, while being deliberately fake: card
+# numbers are random within test BIN ranges, and routing numbers use a "99"
+# prefix that is not an assigned Federal Reserve routing symbol, so they are
+# checksum-valid but non-routable. Never real accounts.
+
+# brand -> (list of allowed prefixes, total length)
+_CARD_BRANDS: dict[str, tuple[list[str], int]] = {
+    "Visa": (["4"], 16),
+    "Mastercard": (["51", "52", "53", "54", "55", "2221", "2720"], 16),
+    "Amex": (["34", "37"], 15),
+    "Discover": (["6011", "65"], 16),
+}
+
+# Countries whose BBAN we can build validly. digits = numeric BBAN length;
+# letters = leading uppercase-letter block (bank code) counted within total.
+_IBAN_SPECS: dict[str, tuple[int, int]] = {
+    # country: (bban_letters, bban_digits)
+    "DE": (0, 18),
+    "ES": (0, 20),
+    "NL": (4, 10),
+}
+
+
+def _luhn_check_digit(payload: str) -> int:
+    """Return the Luhn check digit for a numeric payload (without check digit)."""
+    total = 0
+    for i, ch in enumerate(reversed(payload)):
+        d = int(ch)
+        if i % 2 == 0:  # every other digit starting from payload's rightmost
+            d *= 2
+            if d > 9:
+                d -= 9
+        total += d
+    return (10 - (total % 10)) % 10
+
+
+def rand_card(rng: random.Random) -> tuple[str, str]:
+    """Return (brand, Luhn-valid card number) — fake, within test BIN ranges."""
+    brand = rng.choice(list(_CARD_BRANDS))
+    prefixes, length = _CARD_BRANDS[brand]
+    prefix = rng.choice(prefixes)
+    body = prefix + "".join(str(rng.randint(0, 9)) for _ in range(length - 1 - len(prefix)))
+    return brand, body + str(_luhn_check_digit(body))
+
+
+def _iban_check_digits(country: str, bban: str) -> str:
+    """Compute the two IBAN check digits (mod-97) for a country + BBAN."""
+    rearranged = bban + country + "00"
+    numeric = "".join(str(ord(c) - 55) if c.isalpha() else c for c in rearranged)
+    return f"{98 - (int(numeric) % 97):02d}"
+
+
+def rand_iban(rng: random.Random) -> str:
+    """Return a mod-97-valid IBAN for a supported country. Fake account."""
+    country = rng.choice(list(_IBAN_SPECS))
+    n_letters, n_digits = _IBAN_SPECS[country]
+    bank = "".join(rng.choice(string.ascii_uppercase) for _ in range(n_letters))
+    account = "".join(str(rng.randint(0, 9)) for _ in range(n_digits))
+    bban = bank + account
+    return f"{country}{_iban_check_digits(country, bban)}{bban}"
+
+
+def rand_routing_number(rng: random.Random) -> str:
+    """Return an ABA-checksum-valid but non-routable routing number (99 prefix)."""
+    d = [9, 9] + [rng.randint(0, 9) for _ in range(6)]  # d1..d8; 99 = unassigned prefix
+    partial = 3 * (d[0] + d[3] + d[6]) + 7 * (d[1] + d[4] + d[7]) + (d[2] + d[5])
+    d.append((10 - (partial % 10)) % 10)  # d9 makes the ABA checksum land on 0
+    return "".join(str(x) for x in d)
+
+
+def rand_account_number(rng: random.Random) -> str:
+    """Return a random bank account number (10–12 digits)."""
+    return "".join(str(rng.randint(0, 9)) for _ in range(rng.randint(10, 12)))

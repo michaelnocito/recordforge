@@ -136,6 +136,7 @@ When ready, replace this comment with:
 - Transactions
 - Employee Records
 - Inventory
+- Payments — checksum-valid but fake cards (Luhn), IBANs (mod-97), and non-routable routing numbers (ABA), for testing payment validators
 - Messy Data — nulls, duplicates, bad formatting (great for cleanup testing)
 - Edge Cases — an adversarial corpus (boundaries, unicode, injection, bad dates) for stress-testing parsers and validators
 

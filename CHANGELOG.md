@@ -6,6 +6,18 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Data Forge — checksum-valid identifiers (Phase B)
+
+- New checksum helpers in `core/faker_utils.py`: `rand_card` (Luhn-valid card
+  numbers in test BIN ranges), `rand_iban` (mod-97-valid IBANs for DE/ES/NL),
+  `rand_routing_number` (ABA-checksum-valid but **non-routable** — "99" prefix,
+  an unassigned Federal Reserve routing symbol), and `rand_account_number`
+- New `payments` data type using them (schema: `payment_id, account_holder,
+  card_brand, card_number, iban, routing_number, account_number, amount,
+  currency`)
+- These pass format validators in a test pipeline while never being real
+  accounts — fake by construction, safe to generate openly
+
 ### Data Forge — edge-case corpus (Phase B)
 
 - New `edge_cases` data type: a labeled adversarial corpus (schema
@@ -139,7 +151,6 @@ All notable changes to this project are documented here.
 
 See `ROADMAP.md` for the full plan. Near-term (Phase B/C):
 
-- Checksum-valid identifiers (Luhn card numbers, mod-97 IBANs)
 - Schema files + referential integrity across datasets (foreign keys that join)
 - SQL INSERT and Parquet output
 - Additional document types (bank statement, pay stub, remittance, W-2/1099)

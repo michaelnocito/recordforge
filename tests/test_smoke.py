@@ -260,6 +260,61 @@ def test_generate_data_formats_are_reproducible(tmp_path: Path):
     assert a.path.read_text(encoding="utf-8") == b.path.read_text(encoding="utf-8")
 
 
+# --- Checksum-valid identifiers ---
+
+def _luhn_ok(number: str) -> bool:
+    total = 0
+    for i, ch in enumerate(reversed(number)):
+        d = int(ch)
+        if i % 2 == 1:
+            d *= 2
+            if d > 9:
+                d -= 9
+        total += d
+    return total % 10 == 0
+
+
+def _iban_ok(iban: str) -> bool:
+    rearranged = iban[4:] + iban[:4]
+    numeric = "".join(str(ord(c) - 55) if c.isalpha() else c for c in rearranged)
+    return int(numeric) % 97 == 1
+
+
+def _aba_ok(n: str) -> bool:
+    d = [int(x) for x in n]
+    return (3 * (d[0] + d[3] + d[6]) + 7 * (d[1] + d[4] + d[7]) + (d[2] + d[5] + d[8])) % 10 == 0
+
+
+def test_card_numbers_are_luhn_valid():
+    from recordforge.core.faker_utils import rand_card
+    rng = random.Random(3)
+    cards = [rand_card(rng) for _ in range(200)]
+    assert all(_luhn_ok(num) for _, num in cards)
+    assert all(len(num) in (15, 16) for _, num in cards)
+
+
+def test_ibans_are_mod97_valid():
+    from recordforge.core.faker_utils import rand_iban
+    rng = random.Random(3)
+    assert all(_iban_ok(rand_iban(rng)) for _ in range(200))
+
+
+def test_routing_numbers_valid_but_non_routable():
+    from recordforge.core.faker_utils import rand_routing_number
+    rng = random.Random(3)
+    for _ in range(200):
+        n = rand_routing_number(rng)
+        assert len(n) == 9 and _aba_ok(n)
+        assert n.startswith("99")  # unassigned Fed prefix -> non-routable
+
+
+def test_payments_type_registered(tmp_path: Path):
+    import recordforge as rf
+    assert "payments" in rf.list_types()["data"]
+    doc = rf.generate(type="payments", format="csv", rows=10, output=tmp_path)[0]
+    assert doc.path.exists() and doc.path.stat().st_size > 0
+
+
 # --- Edge-case corpus ---
 
 def test_edge_cases_build_rows():
