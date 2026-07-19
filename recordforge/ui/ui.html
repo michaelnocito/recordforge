@@ -141,6 +141,11 @@ body{margin:0;font-family:'IBM Plex Sans','Segoe UI',system-ui,-apple-system,Rob
             <span style="font-size:11px;color:#52525B;margin-left:4px">per selected type</span>
           </div>
         </div>
+        <div class="field">
+          <label>Seed <span style="font-weight:400;color:#71717A">&#8212; optional, for reproducible output</span></label>
+          <input type="number" id="seedInput" placeholder="random"
+                 style="width:160px;padding:6px 8px;border:1px solid #E4E7EA;border-radius:8px;font-size:13px">
+        </div>
         <div class="field" id="docFormatField">
           <label>Document format</label>
           <div class="select-wrap">
@@ -298,10 +303,12 @@ function buildReview(){
   const dirtyKeys = Object.keys(dirty);
   const pct = Math.round((parseFloat(document.getElementById('dirtyIntensity').value)||0.15)*100);
   const dirtySummary = (hasData && dirtyKeys.length) ? `${dirtyKeys.join(', ')} @ ${pct}%` : 'None (clean data)';
+  const seedVal = document.getElementById('seedInput').value.trim();
   const rows = [
     ['Mode', selectedMode.charAt(0).toUpperCase()+selectedMode.slice(1)],
     ['Types', types.length ? types.join(', ') : 'None'],
     ['Quantity', qty + ' per type'],
+    ['Seed', seedVal === '' ? 'Random' : seedVal],
     ['Document format', docFormat],
     ['Data output', dataOutput],
     ['Induced errors', dirtySummary],
@@ -342,6 +349,7 @@ function generate(){
     dataFormat: document.getElementById('dataFormat').value,
     rows: parseInt(document.getElementById('rowsPerFile').value, 10) || 50,
     dirty: getDirtyConfig(),
+    seed: document.getElementById('seedInput').value.trim() === '' ? null : parseInt(document.getElementById('seedInput').value, 10),
     mode: selectedMode
   };
 

@@ -62,6 +62,12 @@ All notable changes to this project are documented here.
 - Desktop app: data format selector (Excel / CSV / JSON / JSONL) and a
   "Rows per file" input in Step 2, shown for data and both modes
 
+**Seed in the desktop app**
+- Step 2 now has an optional "Seed" field for reproducible output (the CLI
+  and API already had `--seed` / `seed=`)
+- The whole batch is seeded once, so files are deterministic yet still vary
+  across types and copies
+
 **Tests**
 - 29 smoke tests (up from 21): new-format round-trips, row-count control,
   format validation, and cross-format seed reproducibility

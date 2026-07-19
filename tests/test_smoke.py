@@ -260,6 +260,35 @@ def test_generate_data_formats_are_reproducible(tmp_path: Path):
     assert a.path.read_text(encoding="utf-8") == b.path.read_text(encoding="utf-8")
 
 
+# --- Desktop bridge seed ---
+
+def test_ui_bridge_seed_is_reproducible(tmp_path: Path):
+    from recordforge.ui.app import API
+
+    def run(out):
+        return API().generate({
+            "mode": "data", "docTypes": ["customers", "payments"], "quantity": 2,
+            "dataFormat": "csv", "rows": 6, "seed": 1234, "outputFolder": str(out),
+        })
+
+    a, b = run(tmp_path / "a"), run(tmp_path / "b")
+    assert a["success"] and b["success"]
+
+    def by_type(files):
+        out = {}
+        for f in files:
+            out.setdefault(Path(f).name.split("_")[0], []).append(Path(f).read_text(encoding="utf-8"))
+        return out
+
+    ta, tb = by_type(a["files"]), by_type(b["files"])
+    # same seed -> same content per type across runs
+    assert sorted(ta) == sorted(tb)
+    for key in ta:
+        assert sorted(ta[key]) == sorted(tb[key])
+    # two files of one type still differ (rng advances within a batch)
+    assert ta["customers"][0] != ta["customers"][1]
+
+
 # --- Checksum-valid identifiers ---
 
 def _luhn_ok(number: str) -> bool:

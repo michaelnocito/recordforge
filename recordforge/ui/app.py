@@ -90,6 +90,7 @@ class API:
             data_fmt = (payload.get("dataFormat") or "xlsx").lower().strip()
             rows = max(1, int(payload.get("rows", 50)))
             dirty = payload.get("dirty") or None
+            seed = payload.get("seed")
             out_folder = (
                 payload.get("outputFolder")
                 or str(Path.home() / "Documents" / "recordforge")
@@ -100,6 +101,12 @@ class API:
 
             out_dir = Path(out_folder)
             out_dir.mkdir(parents=True, exist_ok=True)
+
+            # Seed once for the whole batch so output is deterministic yet varied
+            # across types and files (re-seeding per generate() call would make
+            # them collide). Individual generate() calls keep seed=None.
+            if seed is not None and str(seed).strip() != "":
+                rf.set_seed(int(seed))
 
             doc_keys = [t for t in selected if t in DOCUMENT_REGISTRY]
             data_keys = [t for t in selected if t in DATA_REGISTRY]
