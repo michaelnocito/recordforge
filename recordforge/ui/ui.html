@@ -112,6 +112,7 @@ body{margin:0;font-family:'IBM Plex Sans','Segoe UI',system-ui,-apple-system,Rob
             <label class="type-card" id="tc-employees"><input type="checkbox" value="employees" onchange="updateTypeCard('tc-employees',this)"><div><div>&#128100; Employee Records</div><div style="color:#52525B;font-size:11px">Tabular dataset</div></div></label>
             <label class="type-card" id="tc-messy"><input type="checkbox" value="messy" onchange="updateTypeCard('tc-messy',this)"><div><div>&#129302; Messy Data</div><div style="color:#52525B;font-size:11px">Nulls, dupes, bad formatting &#8212; for cleanup drills</div></div></label>
             <label class="type-card" id="tc-inventory"><input type="checkbox" value="inventory" onchange="updateTypeCard('tc-inventory',this)"><div><div>&#128230; Inventory</div><div style="color:#52525B;font-size:11px">Tabular dataset</div></div></label>
+            <label class="type-card" id="tc-edge_cases"><input type="checkbox" value="edge_cases" onchange="updateTypeCard('tc-edge_cases',this)"><div><div>&#9888; Edge Cases</div><div style="color:#52525B;font-size:11px">Adversarial corpus &#8212; boundaries, unicode, injection</div></div></label>
           </div>
           <p style="font-size:11px;color:#0E7490;margin-top:10px">Pick the data format (Excel, CSV, JSON, or JSONL) and rows per file in Step 2.</p>
         </div>
@@ -235,7 +236,7 @@ let currentStep = 1;
 let qty = 1;
 let selectedMode = 'documents';
 const DOC_TYPES = ['invoice','purchase_order','intake_form','sop','contract','offer_letter'];
-const DATA_TYPES = ['customers','vendors','transactions','employees','inventory','messy'];
+const DATA_TYPES = ['customers','vendors','transactions','employees','inventory','messy','edge_cases'];
 
 function selectMode(mode){
   selectedMode = mode;

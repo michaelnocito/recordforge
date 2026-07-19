@@ -5,6 +5,7 @@ Keys must match v1 exactly — do not rename.
 """
 
 from recordforge.generators.data.customers import build_rows as build_customers
+from recordforge.generators.data.edge_cases import build_rows as build_edge_cases
 from recordforge.generators.data.employees import build_rows as build_employees
 from recordforge.generators.data.inventory import build_rows as build_inventory
 from recordforge.generators.data.messy import build_rows as build_messy
@@ -18,4 +19,5 @@ DATA_REGISTRY: dict[str, callable] = {
     "employees": build_employees,
     "inventory": build_inventory,
     "messy": build_messy,
+    "edge_cases": build_edge_cases,
 }

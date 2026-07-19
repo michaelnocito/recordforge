@@ -137,6 +137,7 @@ When ready, replace this comment with:
 - Employee Records
 - Inventory
 - Messy Data — nulls, duplicates, bad formatting (great for cleanup testing)
+- Edge Cases — an adversarial corpus (boundaries, unicode, injection, bad dates) for stress-testing parsers and validators
 
 Every org name, address, contact, and party detail is randomly generated
 per file. Pick an output folder, then open files directly from the app

@@ -260,6 +260,31 @@ def test_generate_data_formats_are_reproducible(tmp_path: Path):
     assert a.path.read_text(encoding="utf-8") == b.path.read_text(encoding="utf-8")
 
 
+# --- Edge-case corpus ---
+
+def test_edge_cases_build_rows():
+    from recordforge.generators.data.edge_cases import build_rows
+    rows = build_rows(_fresh_rng(), count=60)
+    assert len(rows) == 60
+    assert {"edge_id", "category", "label", "value"} == set(rows[0].keys())
+    # small count still spans several categories thanks to interleaving
+    assert len({r["category"] for r in build_rows(_fresh_rng(), count=8)}) >= 5
+
+
+def test_edge_cases_registered_and_json_valid(tmp_path: Path):
+    import json as _json
+    import recordforge as rf
+    assert "edge_cases" in rf.list_types()["data"]
+    doc = rf.generate(type="edge_cases", format="json", rows=200, output=tmp_path)[0]
+    data = _json.loads(doc.path.read_text(encoding="utf-8"))  # must be valid JSON (no NaN/Infinity)
+    assert len({r["category"] for r in data}) >= 8
+
+
+def test_edge_cases_are_stable():
+    from recordforge.generators.data.edge_cases import build_rows
+    assert build_rows(random.Random(1), 30) == build_rows(random.Random(999), 30)
+
+
 # --- Dirtying engine ---
 
 def _clean_rows(n=20):

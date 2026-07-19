@@ -6,6 +6,20 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Data Forge — edge-case corpus (Phase B)
+
+- New `edge_cases` data type: a labeled adversarial corpus (schema
+  `edge_id, category, label, value`) covering integer/float boundaries, empty
+  and whitespace strings, very long strings, unicode stress (emoji, combining
+  marks, RTL, zero-width, CJK, null bytes), injection payloads (SQL, XSS,
+  template, log4shell, path traversal, spreadsheet-formula), extreme/invalid
+  dates, special numbers, null-like tokens, and CSV-breaking delimiters
+- Interleaved by category so even a small `--rows` count spans many categories;
+  cycles when `--rows` exceeds the pool
+- Deterministic and offline (a curated subset inspired by the Big List of
+  Naughty Strings, kept inline — no bundled megafile, no download)
+- Available in the CLI, API, and the desktop app's data-type picker
+
 ### Data Forge — a-la-carte "dirty data" (Phase B)
 
 - New `core/dirty.py`: a post-generation transform that injects **user-chosen**
@@ -125,7 +139,6 @@ All notable changes to this project are documented here.
 
 See `ROADMAP.md` for the full plan. Near-term (Phase B/C):
 
-- Edge-case corpus (naughty strings, boundary values, unicode, injection)
 - Checksum-valid identifiers (Luhn card numbers, mod-97 IBANs)
 - Schema files + referential integrity across datasets (foreign keys that join)
 - SQL INSERT and Parquet output
