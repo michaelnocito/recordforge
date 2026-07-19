@@ -165,6 +165,29 @@ body{margin:0;font-family:'IBM Plex Sans','Segoe UI',system-ui,-apple-system,Rob
             <input type="number" id="rowsPerFile" value="50" min="1" max="100000"
                    style="width:96px;padding:6px 8px;border:1px solid #E4E7EA;border-radius:8px;font-size:13px">
           </div>
+          <div style="margin-top:14px;border-top:1px solid #E4E7EA;padding-top:12px">
+            <label>Induce errors <span style="font-weight:400;color:#71717A">&#8212; optional; pick which to inject</span></label>
+            <div class="qty-row" style="margin:8px 0 10px">
+              <label style="margin:0 8px 0 0;font-size:12px">Intensity</label>
+              <div class="select-wrap" style="width:150px">
+                <select id="dirtyIntensity">
+                  <option value="0.05">Light (5%)</option>
+                  <option value="0.15" selected>Medium (15%)</option>
+                  <option value="0.30">Heavy (30%)</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:12px">
+              <label><input type="checkbox" class="dirty-opt" value="nulls"> Missing values (nulls)</label>
+              <label><input type="checkbox" class="dirty-opt" value="blanks"> Empty strings</label>
+              <label><input type="checkbox" class="dirty-opt" value="whitespace"> Stray whitespace</label>
+              <label><input type="checkbox" class="dirty-opt" value="case_drift"> Inconsistent casing</label>
+              <label><input type="checkbox" class="dirty-opt" value="format_drift"> Format drift</label>
+              <label><input type="checkbox" class="dirty-opt" value="outliers"> Outliers</label>
+              <label><input type="checkbox" class="dirty-opt" value="encoding"> Encoding corruption</label>
+              <label><input type="checkbox" class="dirty-opt" value="duplicates"> Duplicate rows</label>
+            </div>
+          </div>
         </div>
         <div class="field">
           <label>Output folder</label>
@@ -253,6 +276,13 @@ function getSelectedTypes(){
   return Array.from(document.querySelectorAll('.type-card input[type=checkbox]:checked')).map(cb=>cb.value);
 }
 
+function getDirtyConfig(){
+  const intensity = parseFloat(document.getElementById('dirtyIntensity').value) || 0.15;
+  const dirty = {};
+  document.querySelectorAll('.dirty-opt:checked').forEach(cb => { dirty[cb.value] = intensity; });
+  return dirty;
+}
+
 function buildReview(){
   const types = getSelectedTypes();
   const format = document.getElementById('exportFormat').value;
@@ -262,12 +292,17 @@ function buildReview(){
   const dataFormat = document.getElementById('dataFormat').value;
   const rowsPerFile = document.getElementById('rowsPerFile').value || '50';
   const dataOutput = hasData ? `${dataFormat.toUpperCase()}, ${rowsPerFile} rows/file` : 'None';
+  const dirty = getDirtyConfig();
+  const dirtyKeys = Object.keys(dirty);
+  const pct = Math.round((parseFloat(document.getElementById('dirtyIntensity').value)||0.15)*100);
+  const dirtySummary = (hasData && dirtyKeys.length) ? `${dirtyKeys.join(', ')} @ ${pct}%` : 'None (clean data)';
   const rows = [
     ['Mode', selectedMode.charAt(0).toUpperCase()+selectedMode.slice(1)],
     ['Types', types.length ? types.join(', ') : 'None'],
     ['Quantity', qty + ' per type'],
     ['Document format', docFormat],
     ['Data output', dataOutput],
+    ['Induced errors', dirtySummary],
     ['Org / Parties', 'Random fictional data'],
     ['Output folder', document.getElementById('folderPath').textContent],
     ['Total files', '~'+(types.length*qty)]
@@ -304,6 +339,7 @@ function generate(){
     format: format,
     dataFormat: document.getElementById('dataFormat').value,
     rows: parseInt(document.getElementById('rowsPerFile').value, 10) || 50,
+    dirty: getDirtyConfig(),
     mode: selectedMode
   };
 

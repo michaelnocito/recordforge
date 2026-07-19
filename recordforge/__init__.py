@@ -21,14 +21,18 @@ def generate(
     output: str | Path | None = None,
     seed: int | None = None,
     rows: int = 50,
+    dirty: dict[str, float] | None = None,
 ) -> list[GeneratedDoc]:
     """Generate synthetic documents or data files.
 
     ``count`` is the number of files. ``rows`` is the number of records per
-    data file (ignored for document types). Returns a list of GeneratedDoc
-    instances, one per file created. Raises ValueError for invalid
-    type/format combinations.
+    data file (ignored for document types). ``dirty`` optionally maps
+    error-type keys to rates (see recordforge.core.dirty.DIRTY_TYPES) to
+    inject controlled messiness into data rows. Returns a list of
+    GeneratedDoc instances, one per file created. Raises ValueError for
+    invalid type/format combinations.
     """
+    from recordforge.core.dirty import apply_dirty
     from recordforge.core.seed import get_rng, set_seed as _set_seed
     from recordforge.generators.data import DATA_REGISTRY
     from recordforge.generators.documents import DOCUMENT_REGISTRY
@@ -70,7 +74,10 @@ def generate(
         builder = DATA_REGISTRY[type]
         renderer = _data_renderers[format]
         for _ in range(count):
-            results.append(renderer(type, builder(rng, rows), out_dir))
+            data_rows = builder(rng, rows)
+            if dirty:
+                data_rows = apply_dirty(data_rows, rng, dirty)
+            results.append(renderer(type, data_rows, out_dir))
 
     else:
         valid = sorted(DOCUMENT_REGISTRY) + sorted(DATA_REGISTRY)

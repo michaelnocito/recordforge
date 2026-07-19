@@ -260,6 +260,66 @@ def test_generate_data_formats_are_reproducible(tmp_path: Path):
     assert a.path.read_text(encoding="utf-8") == b.path.read_text(encoding="utf-8")
 
 
+# --- Dirtying engine ---
+
+def _clean_rows(n=20):
+    return [{"id": i, "name": f"Name{i}", "amount": 100 + i} for i in range(n)]
+
+
+def test_dirty_nulls_injects_none():
+    from recordforge.core.dirty import apply_dirty
+    out = apply_dirty(_clean_rows(), _fresh_rng(), {"nulls": 0.5})
+    assert any(v is None for row in out for v in row.values())
+
+
+def test_dirty_duplicates_grows_row_count():
+    from recordforge.core.dirty import apply_dirty
+    out = apply_dirty(_clean_rows(20), _fresh_rng(), {"duplicates": 1.0})
+    assert len(out) == 40  # every row duplicated once at rate 1.0
+
+
+def test_dirty_does_not_mutate_input():
+    from recordforge.core.dirty import apply_dirty
+    clean = _clean_rows(10)
+    apply_dirty(clean, _fresh_rng(), {"nulls": 1.0})
+    assert all(row["id"] is not None for row in clean)  # original untouched
+
+
+def test_dirty_is_deterministic_under_seed():
+    from recordforge.core.dirty import apply_dirty
+    cfg = {"nulls": 0.2, "case_drift": 0.3, "encoding": 0.2, "duplicates": 0.1}
+    a = apply_dirty(_clean_rows(), random.Random(9), cfg)
+    b = apply_dirty(_clean_rows(), random.Random(9), cfg)
+    assert a == b
+
+
+def test_dirty_rejects_unknown_type():
+    from recordforge.core.dirty import apply_dirty
+    with pytest.raises(ValueError):
+        apply_dirty(_clean_rows(), _fresh_rng(), {"bogus": 0.1})
+
+
+def test_generate_applies_dirty(tmp_path: Path):
+    import csv as _csv
+    import recordforge as rf
+    doc = rf.generate(
+        type="customers", format="csv", rows=40, seed=3, output=tmp_path,
+        dirty={"nulls": 0.3, "duplicates": 0.2},
+    )[0]
+    read = list(_csv.DictReader(doc.path.open(encoding="utf-8")))
+    assert len(read) > 40  # duplicates added rows
+    assert any(v == "" for row in read for v in row.values())  # nulls -> empty in CSV
+
+
+def test_cli_parse_dirty():
+    from recordforge.cli import _parse_dirty
+    assert _parse_dirty("nulls=0.1, case_drift=0.2 ,duplicates=0.05") == {
+        "nulls": 0.1, "case_drift": 0.2, "duplicates": 0.05,
+    }
+    with pytest.raises(ValueError):
+        _parse_dirty("nulls")
+
+
 # --- Seed reproducibility ---
 
 def test_same_seed_same_doc_number():

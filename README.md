@@ -173,11 +173,17 @@ pip install -e .
 recordforge generate --type invoice --format pdf --count 5
 recordforge generate --type customers --format csv --rows 500
 recordforge generate --type transactions --format jsonl --rows 10000 --seed 42
+recordforge generate --type customers --format csv --rows 200 --dirty "nulls=0.1,case_drift=0.2,duplicates=0.05"
 recordforge list-types
 ```
 
 Data types accept `--format xlsx | csv | json | jsonl` and `--rows` (records per
 file). Document types accept `--format pdf | docx | html`.
+
+**Induce errors on purpose** with `--dirty` (or the "Induce errors" menu in the
+app) to test data-cleaning pipelines: choose any of `nulls`, `blanks`,
+`whitespace`, `case_drift`, `format_drift`, `outliers`, `encoding`, `duplicates`,
+each at a rate you set.
 
 **Python API:**
 

@@ -6,6 +6,21 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Data Forge — a-la-carte "dirty data" (Phase B)
+
+- New `core/dirty.py`: a post-generation transform that injects **user-chosen**
+  errors into any dataset, at a controllable rate. Pick which problems to induce:
+  `nulls`, `blanks`, `whitespace`, `case_drift`, `format_drift`, `outliers`,
+  `encoding` (mojibake), `duplicates`
+- Fully deterministic under a seed; transforms run in a fixed order and never
+  mutate the caller's rows
+- API: new `dirty` parameter on `generate()` (a `{type: rate}` dict)
+- CLI: new `--dirty` option, e.g. `--dirty "nulls=0.1,case_drift=0.2,duplicates=0.05"`;
+  `list-types` now lists the available error types
+- Desktop app: an "Induce errors" menu in Step 2 (error checkboxes + Light/Medium/
+  Heavy intensity), shown for data and both modes; the review summarizes it
+- Great for testing data-cleaning / validation pipelines and for cleanup drills
+
 ### Data Forge — formats and row control (Phase B)
 
 **Data output formats**
@@ -110,7 +125,6 @@ All notable changes to this project are documented here.
 
 See `ROADMAP.md` for the full plan. Near-term (Phase B/C):
 
-- A-la-carte "dirty data" menu: choose which errors to inject and at what rate
 - Edge-case corpus (naughty strings, boundary values, unicode, injection)
 - Checksum-valid identifiers (Luhn card numbers, mod-97 IBANs)
 - Schema files + referential integrity across datasets (foreign keys that join)

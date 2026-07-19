@@ -89,6 +89,7 @@ class API:
             fmt = (payload.get("format") or "").lower().strip()
             data_fmt = (payload.get("dataFormat") or "xlsx").lower().strip()
             rows = max(1, int(payload.get("rows", 50)))
+            dirty = payload.get("dirty") or None
             out_folder = (
                 payload.get("outputFolder")
                 or str(Path.home() / "Documents" / "recordforge")
@@ -118,7 +119,8 @@ class API:
                     raise ValueError("Choose a data format (xlsx, csv, json, or jsonl).")
                 for dataset in data_keys:
                     docs = rf.generate(
-                        type=dataset, format=data_fmt, count=qty, output=out_folder, rows=rows
+                        type=dataset, format=data_fmt, count=qty, output=out_folder,
+                        rows=rows, dirty=dirty,
                     )
                     generated_files.extend(str(d.path) for d in docs)
 
