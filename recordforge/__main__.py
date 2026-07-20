@@ -1,17 +1,14 @@
 """Entry point for `python -m recordforge` — launches the desktop UI."""
 
-from pathlib import Path
-
 import webview
 
-from recordforge.ui.app import API
+from recordforge.ui.app import API, ui_html_path
 
 
 def main() -> None:
     """Launch the RecordForge desktop UI via pywebview."""
     api = API()
-    ui_path = Path(__file__).parent / "ui" / "ui.html"
-    html = ui_path.read_text(encoding="utf-8")
+    html = ui_html_path().read_text(encoding="utf-8")
 
     webview.create_window(
         "RecordForge",

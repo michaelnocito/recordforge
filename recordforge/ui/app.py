@@ -24,6 +24,17 @@ RELEASES_URL = "https://github.com/michaelnocito/recordforge/releases/latest"
 API_URL = "https://api.github.com/repos/michaelnocito/recordforge/releases/latest"
 
 
+def ui_html_path() -> Path:
+    """Absolute path to the wizard HTML (recordforge/ui/ui.html).
+
+    Resolved from this package module, not the entry script: inside a PyInstaller
+    onefile bundle the entry script's __file__ is flattened to the bundle root,
+    but a package module keeps its recordforge/ui/ path, so this locates the
+    bundled ui.html correctly both from source and when frozen.
+    """
+    return Path(__file__).parent / "ui.html"
+
+
 def _parse_version(v: str) -> tuple[int, ...]:
     """Parse a version string into comparable integer parts.
 

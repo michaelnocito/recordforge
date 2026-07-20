@@ -773,6 +773,17 @@ def test_related_parquet_keeps_fk_integrity(tmp_path: Path):
     assert all(p["customer_id"] in customer_ids for p in by["payments"])
 
 
+# --- Packaged UI asset resolution (PyInstaller onefile regression) ---
+
+def test_ui_html_path_resolves_to_existing_file():
+    from recordforge.ui.app import ui_html_path
+    p = ui_html_path()
+    assert p.name == "ui.html"
+    assert p.exists() and p.read_text(encoding="utf-8").strip()
+    # must resolve under recordforge/ui so it matches the PyInstaller --add-data dest
+    assert p.parent.name == "ui" and p.parent.parent.name == "recordforge"
+
+
 # --- Opt-in update check (offline; network is monkeypatched) ---
 
 def test_parse_version_strips_prefix_and_suffix():
