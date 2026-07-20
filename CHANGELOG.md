@@ -6,6 +6,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [2.1.0] — 2026-07-19
+
 ### New data formats — SQL and Parquet (Phase C, slice C3)
 
 - **SQL INSERT renderer** (`renderers/sql.py`, Postgres / ANSI flavor): emits

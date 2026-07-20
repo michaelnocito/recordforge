@@ -1,6 +1,6 @@
 [Setup]
 AppName=RecordForge
-AppVersion=2.0.0
+AppVersion=2.1.0
 AppPublisher=Michael Nocito
 AppPublisherURL=https://github.com/michaelnocito/recordforge
 AppSupportURL=https://github.com/michaelnocito/recordforge/issues

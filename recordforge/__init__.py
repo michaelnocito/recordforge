@@ -5,7 +5,7 @@ from pathlib import Path
 from recordforge.core.models import GeneratedDoc
 from recordforge.core.seed import set_seed
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 
 
 DATA_FORMATS = ("xlsx", "csv", "json", "jsonl", "sql", "parquet")

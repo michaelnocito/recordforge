@@ -63,11 +63,17 @@ pip install pyinstaller
 python -m PyInstaller --name "RecordForge" --onefile --noconsole `
   --add-data "recordforge/ui/ui.html;recordforge/ui" `
   --add-data "recordforge/renderers/templates;recordforge/renderers/templates" `
+  --exclude-module pyarrow `
   recordforge/__main__.py
 ```
 
 > Use `python -m PyInstaller` not `pyinstaller` directly.
 > On Windows, pip installs PyInstaller to a user AppData folder that may not be in PATH.
+>
+> `--exclude-module pyarrow` keeps the optional Parquet dependency out of the
+> desktop build so the installer stays small. Parquet output stays available
+> via `pip install "recordforge[parquet]"` and the CLI. Leave the flag in even
+> if pyarrow is not installed on your build machine (it is harmless then).
 
 Output: `dist\RecordForge.exe`
 
