@@ -16,6 +16,11 @@ dependencies = [
     "pyyaml>=6.0",
 ]
 
+[project.optional-dependencies]
+# Parquet output is opt-in: pyarrow is large and intentionally NOT bundled in
+# the Windows installer, so it stays a pip/CLI-only extra.
+parquet = ["pyarrow>=15"]
+
 [project.scripts]
 recordforge = "recordforge.cli:app"
 

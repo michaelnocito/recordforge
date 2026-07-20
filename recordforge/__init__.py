@@ -8,10 +8,26 @@ from recordforge.core.seed import set_seed
 __version__ = "2.0.0"
 
 
-DATA_FORMATS = ("xlsx", "csv", "json", "jsonl")
+DATA_FORMATS = ("xlsx", "csv", "json", "jsonl", "sql", "parquet")
 DOCUMENT_FORMATS = ("pdf", "docx", "html")
 
 MAX_ROWS = 1_000_000
+
+
+def _data_renderer_map() -> dict[str, callable]:
+    """Per-dataset data renderers keyed by format (one file per dataset)."""
+    from recordforge.renderers import (
+        csv as csv_r, json as json_r, jsonl as jsonl_r,
+        parquet as parquet_r, sql as sql_r, xlsx,
+    )
+    return {
+        "xlsx": xlsx.render,
+        "csv": csv_r.render,
+        "json": json_r.render,
+        "jsonl": jsonl_r.render,
+        "sql": sql_r.render,
+        "parquet": parquet_r.render,
+    }
 
 
 def generate(
@@ -36,7 +52,10 @@ def generate(
     from recordforge.core.seed import get_rng, set_seed as _set_seed
     from recordforge.generators.data import DATA_REGISTRY
     from recordforge.generators.documents import DOCUMENT_REGISTRY
-    from recordforge.renderers import csv as csv_r, docx, html, json as json_r, jsonl as jsonl_r, pdf, xlsx
+    from recordforge.renderers import (
+        csv as csv_r, docx, html, json as json_r, jsonl as jsonl_r,
+        parquet as parquet_r, pdf, sql as sql_r, xlsx,
+    )
 
     if seed is not None:
         _set_seed(seed)
@@ -63,13 +82,16 @@ def generate(
     elif type in DATA_REGISTRY:
         if format not in DATA_FORMATS:
             raise ValueError(
-                f"Format '{format}' is not valid for data types. Use xlsx, csv, json, or jsonl."
+                f"Format '{format}' is not valid for data types. "
+                f"Use {', '.join(DATA_FORMATS)}."
             )
         _data_renderers = {
             "xlsx": xlsx.render,
             "csv": csv_r.render,
             "json": json_r.render,
             "jsonl": jsonl_r.render,
+            "sql": sql_r.render,
+            "parquet": parquet_r.render,
         }
         builder = DATA_REGISTRY[type]
         renderer = _data_renderers[format]
@@ -100,17 +122,17 @@ def generate_related(
     ``transactions.customer_id`` is always drawn from the generated
     ``customers.customer_id`` pool, and every payment settles a real
     transaction, so the output joins with no orphan keys. Files are written in
-    dependency order (customers, then transactions, then payments). Returns a
-    list of GeneratedDoc instances, one per dataset. Raises ValueError for an
-    invalid data format.
+    dependency order (customers, then transactions, then payments); the ``sql``
+    format instead writes a single FK-ordered .sql file. Returns a list of
+    GeneratedDoc instances. Raises ValueError for an invalid data format.
     """
     from recordforge.core.seed import get_rng, set_seed as _set_seed
     from recordforge.generators.related import RELATED_DATASETS, build_related
-    from recordforge.renderers import csv as csv_r, json as json_r, jsonl as jsonl_r, xlsx
 
     if format not in DATA_FORMATS:
         raise ValueError(
-            f"Format '{format}' is not valid for relational bundles. Use xlsx, csv, json, or jsonl."
+            f"Format '{format}' is not valid for relational bundles. "
+            f"Use {', '.join(DATA_FORMATS)}."
         )
 
     if seed is not None:
@@ -126,16 +148,14 @@ def generate_related(
         "payments": max(1, min(payments, MAX_ROWS)),
     }
     datasets = build_related(rng, spec)
+    ordered = {name: datasets[name] for name in RELATED_DATASETS}
 
-    _data_renderers = {
-        "xlsx": xlsx.render,
-        "csv": csv_r.render,
-        "json": json_r.render,
-        "jsonl": jsonl_r.render,
-    }
-    renderer = _data_renderers[format]
+    if format == "sql":
+        from recordforge.renderers import sql as sql_r
+        return [sql_r.render_bundle(ordered, out_dir, name="related")]
 
-    return [renderer(name, datasets[name], out_dir) for name in RELATED_DATASETS]
+    renderer = _data_renderer_map()[format]
+    return [renderer(name, rows, out_dir) for name, rows in ordered.items()]
 
 
 def generate_schema(
@@ -149,17 +169,18 @@ def generate_schema(
     The schema declares datasets, their columns (from a supported type
     vocabulary), and foreign-key relationships. Datasets are generated in
     dependency order so every foreign key resolves to a real parent key, then
-    each is rendered to one data ``format``. Returns a list of GeneratedDoc
-    instances, one per dataset, in the schema's declared order. Raises
-    ValueError for an invalid format or an invalid schema.
+    each is rendered to one data ``format``. The ``sql`` format instead writes a
+    single .sql file with all tables in FK-safe (topological) order. Returns a
+    list of GeneratedDoc instances. Raises ValueError for an invalid format or
+    an invalid schema.
     """
     from recordforge.core.seed import get_rng, set_seed as _set_seed
     from recordforge.schema import generate_datasets, load_schema
-    from recordforge.renderers import csv as csv_r, json as json_r, jsonl as jsonl_r, xlsx
 
     if format not in DATA_FORMATS:
         raise ValueError(
-            f"Format '{format}' is not valid for schemas. Use xlsx, csv, json, or jsonl."
+            f"Format '{format}' is not valid for schemas. "
+            f"Use {', '.join(DATA_FORMATS)}."
         )
 
     schema = load_schema(schema_path)
@@ -173,14 +194,13 @@ def generate_schema(
 
     datasets = generate_datasets(rng, schema)
 
-    _data_renderers = {
-        "xlsx": xlsx.render,
-        "csv": csv_r.render,
-        "json": json_r.render,
-        "jsonl": jsonl_r.render,
-    }
-    renderer = _data_renderers[format]
+    if format == "sql":
+        from recordforge.renderers import sql as sql_r
+        from recordforge.schema import topo_order
+        ordered = {name: datasets[name] for name in topo_order(schema)}
+        return [sql_r.render_bundle(ordered, out_dir, name=schema.name)]
 
+    renderer = _data_renderer_map()[format]
     return [renderer(name, rows, out_dir) for name, rows in datasets.items()]
 
 

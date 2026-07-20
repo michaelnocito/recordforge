@@ -6,6 +6,29 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### New data formats — SQL and Parquet (Phase C, slice C3)
+
+- **SQL INSERT renderer** (`renderers/sql.py`, Postgres / ANSI flavor): emits
+  `INSERT INTO` statements with double-quoted identifiers and standard
+  single-quote escaping, batched into multi-row `VALUES`. Available as
+  `--format sql` on `generate`, `generate-related`, and `generate-schema`
+- For relational bundles and schemas, SQL is written as **one combined .sql
+  file with tables in foreign-key-safe order** (parents before children, via
+  the schema's topological order), so it loads into a database without
+  violating foreign keys. Verified by loading a generated bundle into SQLite
+  and confirming the joins resolve with no orphans. Output is deterministic
+  (no timestamps), so a seeded run reproduces byte for byte
+- **Parquet renderer** (`renderers/parquet.py`, via `pyarrow`): `--format
+  parquet` on the same three commands. Columns that mix types (such as the
+  `edge_cases` corpus) fall back to text so any dataset still writes a valid
+  file
+- `pyarrow` is an **optional extra** (`pip install "recordforge[parquet]"`),
+  imported lazily and deliberately **not bundled in the Windows installer** to
+  keep it lean. Importing `recordforge` does not import `pyarrow`; selecting
+  Parquet without it gives a clear install message. The desktop app's format
+  picker is unchanged (xlsx/csv/json/jsonl), so SQL and Parquet are pip/CLI
+  features
+
 ### Referential integrity — schema files (Phase C, slice C2)
 
 - New `recordforge/schema/` package: define **datasets, columns, and foreign-key

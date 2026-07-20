@@ -1,1 +1,4 @@
-"""Renderers: pdf, docx, html, xlsx."""
+"""Renderers.
+
+Documents: pdf, docx, html.  Data: xlsx, csv, json, jsonl, sql, parquet.
+"""

@@ -641,6 +641,138 @@ def test_cli_generate_schema(tmp_path: Path):
     assert len(list(tmp_path.glob("*.csv"))) == 3
 
 
+# --- SQL renderer (C3) ---
+
+def test_sql_literal_and_ident_escaping():
+    from decimal import Decimal
+    from recordforge.renderers.sql import _ident, _literal
+    assert _literal(None) == "NULL"
+    assert _literal(True) == "TRUE" and _literal(False) == "FALSE"
+    assert _literal(42) == "42"
+    assert _literal(Decimal("19.95")) == "19.95"
+    assert _literal("O'Brien") == "'O''Brien'"   # single quote doubled
+    assert _ident('weird"name') == '"weird""name"'  # double quote doubled
+
+
+def test_sql_single_table_render(tmp_path: Path):
+    from recordforge.generators.data.customers import build_rows
+    from recordforge.renderers.sql import render
+    rows = build_rows(_fresh_rng(), count=5)
+    doc = render("customers", rows, tmp_path)
+    text = doc.path.read_text(encoding="utf-8")
+    assert doc.format == "sql" and doc.path.suffix == ".sql"
+    assert 'INSERT INTO "customers"' in text
+    assert text.count("(") >= 5  # at least one value tuple per row
+
+
+def test_generate_sql_format(tmp_path: Path):
+    import recordforge as rf
+    doc = rf.generate(type="payments", format="sql", rows=8, seed=1, output=tmp_path)[0]
+    assert doc.path.suffix == ".sql"
+    assert 'INSERT INTO "payments"' in doc.path.read_text(encoding="utf-8")
+
+
+def test_related_sql_bundle_is_single_fk_ordered_file(tmp_path: Path):
+    import recordforge as rf
+    docs = rf.generate_related(output=tmp_path, format="sql", seed=1,
+                               customers=20, transactions=60, payments=40)
+    assert len(docs) == 1  # one combined file, not three
+    text = docs[0].path.read_text(encoding="utf-8")
+    # parents inserted before children
+    assert text.index('INSERT INTO "customers"') < text.index('INSERT INTO "transactions"')
+    assert text.index('INSERT INTO "transactions"') < text.index('INSERT INTO "payments"')
+
+
+def test_related_sql_bundle_executes_in_sqlite(tmp_path: Path):
+    """The emitted INSERTs load and join cleanly in a real database."""
+    import re
+    import sqlite3
+    import recordforge as rf
+    doc = rf.generate_related(output=tmp_path, format="sql", seed=2,
+                              customers=25, transactions=80, payments=50)[0]
+    sql = doc.path.read_text(encoding="utf-8")
+    # Build CREATE TABLE from each INSERT's column list (all TEXT is fine here).
+    cols_by_table: dict[str, str] = {}
+    for m in re.finditer(r'INSERT INTO "(\w+)" \(([^)]+)\) VALUES', sql):
+        cols_by_table.setdefault(m.group(1), m.group(2))
+    ddl = "".join(
+        f'CREATE TABLE "{t}" ({", ".join(c.strip() + " TEXT" for c in cols.split(","))});\n'
+        for t, cols in cols_by_table.items()
+    )
+    con = sqlite3.connect(":memory:")
+    con.executescript(ddl + sql)  # raises if the SQL is malformed
+    cur = con.cursor()
+    customers = {r[0] for r in cur.execute('SELECT "customer_id" FROM "customers"')}
+    txn_cust = {r[0] for r in cur.execute('SELECT "customer_id" FROM "transactions"')}
+    pay_txn = {r[0] for r in cur.execute('SELECT "txn_id" FROM "payments"')}
+    txns = {r[0] for r in cur.execute('SELECT "txn_id" FROM "transactions"')}
+    assert txn_cust <= customers      # no orphan transactions
+    assert pay_txn <= txns            # no orphan payments
+    con.close()
+
+
+def test_schema_sql_bundle_is_topologically_ordered(tmp_path: Path):
+    """Even when a child dataset is declared before its parent, SQL is FK-ordered."""
+    import recordforge as rf
+    p = _write_schema(tmp_path, "rev.json",
+        '{"datasets":['
+        '{"name":"orders","count":5,"columns":['
+        '{"name":"order_id","type":"id"},'
+        '{"name":"customer_id","type":"fk","ref":"customers.customer_id"}]},'
+        '{"name":"customers","count":5,"columns":[{"name":"customer_id","type":"id"}]}'
+        ']}')
+    doc = rf.generate_schema(p, output=tmp_path, format="sql", seed=1)[0]
+    text = doc.path.read_text(encoding="utf-8")
+    assert text.index('INSERT INTO "customers"') < text.index('INSERT INTO "orders"')
+
+
+def test_sql_bundle_is_reproducible(tmp_path: Path):
+    import recordforge as rf
+    a = rf.generate_related(output=tmp_path / "a", format="sql", seed=9,
+                            customers=10, transactions=30, payments=15)[0]
+    b = rf.generate_related(output=tmp_path / "b", format="sql", seed=9,
+                            customers=10, transactions=30, payments=15)[0]
+    assert a.path.read_text(encoding="utf-8") == b.path.read_text(encoding="utf-8")
+
+
+# --- Parquet renderer (C3, optional pyarrow) ---
+
+def test_parquet_round_trips(tmp_path: Path):
+    pytest.importorskip("pyarrow")
+    import pyarrow.parquet as pq
+    import recordforge as rf
+    doc = rf.generate(type="customers", format="parquet", rows=30, seed=1, output=tmp_path)[0]
+    assert doc.path.suffix == ".parquet"
+    table = pq.read_table(doc.path)
+    assert table.num_rows == 30
+    assert "customer_id" in table.column_names
+
+
+def test_parquet_handles_mixed_type_edge_cases(tmp_path: Path):
+    pytest.importorskip("pyarrow")
+    import pyarrow.parquet as pq
+    import recordforge as rf
+    # edge_cases 'value' column mixes ints, floats, strings, and nulls
+    doc = rf.generate(type="edge_cases", format="parquet", rows=200, seed=1, output=tmp_path)[0]
+    table = pq.read_table(doc.path)  # must read back without error
+    assert table.num_rows == 200
+    # the mixed-type 'value' column falls back to text rather than crashing
+    assert table.schema.field("value").type == "string"
+
+
+def test_related_parquet_keeps_fk_integrity(tmp_path: Path):
+    pytest.importorskip("pyarrow")
+    import pyarrow.parquet as pq
+    import recordforge as rf
+    docs = rf.generate_related(output=tmp_path, format="parquet", seed=1,
+                               customers=20, transactions=60, payments=40)
+    assert len(docs) == 3 and all(d.path.suffix == ".parquet" for d in docs)
+    by = {d.doc_type: pq.read_table(d.path).to_pylist() for d in docs}
+    customer_ids = {r["customer_id"] for r in by["customers"]}
+    assert all(t["customer_id"] in customer_ids for t in by["transactions"])
+    assert all(p["customer_id"] in customer_ids for p in by["payments"])
+
+
 # --- Seed reproducibility ---
 
 def test_same_seed_same_doc_number():

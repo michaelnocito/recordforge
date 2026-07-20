@@ -31,7 +31,9 @@ def _parse_dirty(spec: str) -> dict[str, float]:
 def generate(
     type: str = typer.Option(..., "--type", help="Document or data type key"),
     format: str = typer.Option(
-        ..., "--format", help="Documents: pdf | docx | html.  Data: xlsx | csv | json | jsonl"
+        ...,
+        "--format",
+        help="Documents: pdf | docx | html.  Data: xlsx | csv | json | jsonl | sql | parquet",
     ),
     count: int = typer.Option(1, "--count", help="Number of files to generate (1–100)"),
     rows: int = typer.Option(50, "--rows", help="Rows per data file (ignored for documents)"),
@@ -62,7 +64,9 @@ def generate(
 
 @app.command(name="generate-related")
 def generate_related(
-    format: str = typer.Option("csv", "--format", help="Data format: xlsx | csv | json | jsonl"),
+    format: str = typer.Option(
+        "csv", "--format", help="Data format: xlsx | csv | json | jsonl | sql | parquet"
+    ),
     customers: int = typer.Option(100, "--customers", help="Number of customer rows"),
     transactions: int = typer.Option(500, "--transactions", help="Number of transaction rows"),
     payments: int = typer.Option(200, "--payments", help="Number of payment rows"),
@@ -89,7 +93,9 @@ def generate_related(
 @app.command(name="generate-schema")
 def generate_schema(
     schema: Path = typer.Option(..., "--schema", help="Path to a YAML or JSON schema file"),
-    format: str = typer.Option("csv", "--format", help="Data format: xlsx | csv | json | jsonl"),
+    format: str = typer.Option(
+        "csv", "--format", help="Data format: xlsx | csv | json | jsonl | sql | parquet"
+    ),
     output: Optional[Path] = typer.Option(None, "--output", help="Output directory"),
     seed: Optional[int] = typer.Option(None, "--seed", help="Integer seed for reproducible output"),
 ) -> None:
@@ -117,7 +123,7 @@ def list_types() -> None:
     typer.echo("Document types (use with --format pdf | docx | html):")
     for t in types["documents"]:
         typer.echo(f"  {t}")
-    typer.echo("\nData types (use with --format xlsx | csv | json | jsonl):")
+    typer.echo("\nData types (use with --format xlsx | csv | json | jsonl | sql | parquet):")
     for t in types["data"]:
         typer.echo(f"  {t}")
     typer.echo("\nDirty error types (use with --dirty key=rate,...):")
