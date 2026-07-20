@@ -6,6 +6,35 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+### Referential integrity — schema files (Phase C, slice C2)
+
+- New `recordforge/schema/` package: define **datasets, columns, and foreign-key
+  relationships in a YAML or JSON file**, then generate all of them at once with
+  referential integrity. Foreign keys resolve to real parent keys, so the output
+  joins with no orphans
+- Column type vocabulary: `id` (sequential key), `fk` (foreign key ->
+  `table.column`), `person`, `company`, `email`, `phone`, `int`, `decimal`,
+  `money`, `choice`, `date`, `bool`, `string`, `card`, `iban`,
+  `routing_number`, `account_number`
+- Builds a **dependency graph and topological (parent-before-child) insert
+  order**, keeps per-column **key pools** for foreign keys to draw from, and
+  handles **self-references** (for example `manager_id -> employees.employee_id`)
+  as an acyclic hierarchy: the first row is a null root and every later row
+  points at an earlier one, so there is never a cycle
+- A true cross-table circular dependency is reported as a clear error, not
+  silently mis-generated
+- Schema validation runs before any file is written, with errors that name the
+  offending dataset and column (unknown type, foreign key to a missing
+  table/column, `choice` without values, and so on)
+- New public API `generate_schema(schema_path, output, format, seed)` and CLI
+  `recordforge generate-schema --schema shop.yml --format csv [--seed N]
+  [--output DIR]`
+- Example schemas under `examples/`: `shop.yml` (customers -> orders ->
+  order_payments) and `org.json` (departments + a self-referencing employee
+  hierarchy)
+- Adds a `pyyaml` dependency for reading YAML schemas (pure-Python, offline;
+  JSON schemas need no extra dependency)
+
 ### Referential integrity — relational bundle (Phase C, slice C1)
 
 - New `generators/related.py` builds **customers, transactions, and payments in

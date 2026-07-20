@@ -1,0 +1,40 @@
+# RecordForge schema — a small shop.
+#
+# Three linked tables. customers is the parent; orders reference a real
+# customer; order_payments reference a real order (and the same customer).
+# Generate with:
+#   recordforge generate-schema --schema examples/shop.yml --format csv --seed 1
+#
+# Column types: id (sequential key), fk (foreign key -> table.column),
+# person, company, email, phone, int, decimal, choice, date, card, iban.
+
+name: shop
+
+datasets:
+  - name: customers
+    count: 80
+    columns:
+      - { name: customer_id, type: id, prefix: "CUST-", start: 1000 }
+      - { name: name, type: person }
+      - { name: company, type: company }
+      - { name: email, type: email }
+      - { name: phone, type: phone }
+
+  - name: orders
+    count: 400
+    columns:
+      - { name: order_id, type: id, prefix: "ORD-", start: 50000 }
+      - { name: customer_id, type: fk, ref: customers.customer_id }
+      - { name: status, type: choice, values: ["pending", "paid", "shipped", "refunded"] }
+      - { name: amount, type: decimal, min: 10, max: 2500, places: 2 }
+      - { name: ordered_at, type: date, days_back: 180 }
+
+  - name: order_payments
+    count: 300
+    columns:
+      - { name: payment_id, type: id, prefix: "PAY-", start: 900000 }
+      - { name: order_id, type: fk, ref: orders.order_id }
+      - { name: customer_id, type: fk, ref: customers.customer_id }
+      - { name: method, type: choice, values: ["card", "bank_transfer", "wallet"] }
+      - { name: card_number, type: card }
+      - { name: iban, type: iban }

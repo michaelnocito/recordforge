@@ -86,6 +86,26 @@ def generate_related(
         raise typer.Exit(1)
 
 
+@app.command(name="generate-schema")
+def generate_schema(
+    schema: Path = typer.Option(..., "--schema", help="Path to a YAML or JSON schema file"),
+    format: str = typer.Option("csv", "--format", help="Data format: xlsx | csv | json | jsonl"),
+    output: Optional[Path] = typer.Option(None, "--output", help="Output directory"),
+    seed: Optional[int] = typer.Option(None, "--seed", help="Integer seed for reproducible output"),
+) -> None:
+    """Generate linked datasets from a schema file, with foreign keys resolved."""
+    import recordforge as rf
+
+    try:
+        docs = rf.generate_schema(schema_path=schema, output=output, format=format, seed=seed)
+        for doc in docs:
+            typer.echo(str(doc.path))
+        typer.echo(f"\nGenerated {len(docs)} dataset(s) from schema.")
+    except ValueError as exc:
+        typer.echo(f"Error: {exc}", err=True)
+        raise typer.Exit(1)
+
+
 @app.command(name="list-types")
 def list_types() -> None:
     """Print all available document and data type keys."""

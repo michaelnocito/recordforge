@@ -530,6 +530,117 @@ def test_cli_generate_related(tmp_path: Path):
     assert len(list(tmp_path.glob("*.json"))) == 3
 
 
+# --- Schema-driven generation (C2) ---
+
+EXAMPLES = Path(__file__).resolve().parent.parent / "examples"
+
+
+def _write_schema(tmp_path: Path, name: str, body: str) -> Path:
+    p = tmp_path / name
+    p.write_text(body, encoding="utf-8")
+    return p
+
+
+def test_schema_topo_order_parent_before_child():
+    from recordforge.schema import Column, Dataset, Schema, topo_order
+    # child declared before parent on purpose
+    child = Dataset("orders", 5, [
+        Column("order_id", "id"),
+        Column("customer_id", "fk", {"ref": "customers.customer_id"}),
+    ])
+    parent = Dataset("customers", 5, [Column("customer_id", "id")])
+    order = topo_order(Schema("s", [child, parent]))
+    assert order.index("customers") < order.index("orders")
+
+
+def test_schema_cross_table_cycle_is_rejected():
+    from recordforge.schema import Column, Dataset, Schema, topo_order
+    a = Dataset("a", 3, [Column("a_id", "id"), Column("b_id", "fk", {"ref": "b.b_id"})])
+    b = Dataset("b", 3, [Column("b_id", "id"), Column("a_id", "fk", {"ref": "a.a_id"})])
+    with pytest.raises(ValueError, match="circular"):
+        topo_order(Schema("s", [a, b]))
+
+
+def test_schema_generate_has_no_orphan_fks(tmp_path: Path):
+    from recordforge.schema import generate_datasets, load_schema
+    data = generate_datasets(_fresh_rng(), load_schema(EXAMPLES / "shop.yml"))
+    customer_ids = {r["customer_id"] for r in data["customers"]}
+    order_ids = {r["order_id"] for r in data["orders"]}
+    assert all(o["customer_id"] in customer_ids for o in data["orders"])
+    assert all(p["order_id"] in order_ids for p in data["order_payments"])
+    assert all(p["customer_id"] in customer_ids for p in data["order_payments"])
+
+
+def test_schema_self_reference_builds_acyclic_hierarchy():
+    from recordforge.schema import generate_datasets, load_schema
+    data = generate_datasets(_fresh_rng(), load_schema(EXAMPLES / "org.json"))
+    emps = data["employees"]
+    ids = {e["employee_id"] for e in emps}
+    # first employee is a null root; nobody manages themselves; managers exist
+    assert emps[0]["manager_id"] is None
+    for e in emps:
+        assert e["manager_id"] != e["employee_id"]
+        if e["manager_id"] is not None:
+            assert e["manager_id"] in ids
+    assert any(e["manager_id"] is not None for e in emps)
+
+
+def test_schema_generate_schema_writes_files_and_is_reproducible(tmp_path: Path):
+    import recordforge as rf
+    a = rf.generate_schema(EXAMPLES / "shop.yml", output=tmp_path / "a", format="json", seed=4)
+    b = rf.generate_schema(EXAMPLES / "shop.yml", output=tmp_path / "b", format="json", seed=4)
+    assert {d.doc_type for d in a} == {"customers", "orders", "order_payments"}
+    a_by = {d.doc_type: d.path.read_text(encoding="utf-8") for d in a}
+    b_by = {d.doc_type: d.path.read_text(encoding="utf-8") for d in b}
+    assert a_by == b_by
+
+
+def test_schema_decimal_column_serializes_json(tmp_path: Path):
+    import json as _json
+    import recordforge as rf
+    docs = rf.generate_schema(EXAMPLES / "shop.yml", output=tmp_path, format="json", seed=1)
+    orders = next(d for d in docs if d.doc_type == "orders")
+    rows = _json.loads(orders.path.read_text(encoding="utf-8"))  # must parse
+    assert all("." in str(r["amount"]) for r in rows)  # decimal rendered with places
+
+
+def test_schema_rejects_unknown_type(tmp_path: Path):
+    from recordforge.schema import load_schema
+    p = _write_schema(tmp_path, "bad.json",
+        '{"datasets":[{"name":"t","count":2,"columns":[{"name":"x","type":"bogus"}]}]}')
+    with pytest.raises(ValueError, match="unknown type"):
+        load_schema(p)
+
+
+def test_schema_rejects_fk_to_missing_table(tmp_path: Path):
+    from recordforge.schema import load_schema
+    p = _write_schema(tmp_path, "bad.json",
+        '{"datasets":[{"name":"t","count":2,"columns":['
+        '{"name":"id","type":"id"},{"name":"fk","type":"fk","ref":"ghost.id"}]}]}')
+    with pytest.raises(ValueError, match="unknown table"):
+        load_schema(p)
+
+
+def test_schema_rejects_choice_without_values(tmp_path: Path):
+    from recordforge.schema import load_schema
+    p = _write_schema(tmp_path, "bad.json",
+        '{"datasets":[{"name":"t","count":2,"columns":[{"name":"s","type":"choice"}]}]}')
+    with pytest.raises(ValueError, match="choice"):
+        load_schema(p)
+
+
+def test_cli_generate_schema(tmp_path: Path):
+    from typer.testing import CliRunner
+    from recordforge.cli import app
+    result = CliRunner().invoke(app, [
+        "generate-schema", "--schema", str(EXAMPLES / "shop.yml"),
+        "--format", "csv", "--output", str(tmp_path), "--seed", "3",
+    ])
+    assert result.exit_code == 0
+    assert "Generated 3 dataset(s) from schema." in result.stdout
+    assert len(list(tmp_path.glob("*.csv"))) == 3
+
+
 # --- Seed reproducibility ---
 
 def test_same_seed_same_doc_number():

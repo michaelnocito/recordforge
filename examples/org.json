@@ -1,0 +1,26 @@
+{
+  "name": "org",
+  "_comment": "Self-referencing foreign key example. manager_id points back at employees.employee_id, forming a management hierarchy: the first employee has no manager (null root) and every other employee reports to an earlier one, so there is never a cycle. Generate with: recordforge generate-schema --schema examples/org.json --format json --seed 1",
+  "datasets": [
+    {
+      "name": "departments",
+      "count": 8,
+      "columns": [
+        { "name": "dept_id", "type": "id", "prefix": "DEPT-", "start": 10 },
+        { "name": "name", "type": "choice", "values": ["Engineering", "Finance", "Sales", "Operations", "People", "Legal", "Data", "Support"] }
+      ]
+    },
+    {
+      "name": "employees",
+      "count": 60,
+      "columns": [
+        { "name": "employee_id", "type": "id", "prefix": "EMP-", "start": 1000 },
+        { "name": "name", "type": "person" },
+        { "name": "email", "type": "email" },
+        { "name": "dept_id", "type": "fk", "ref": "departments.dept_id" },
+        { "name": "manager_id", "type": "fk", "ref": "employees.employee_id", "nullable": true },
+        { "name": "salary", "type": "int", "min": 55000, "max": 210000 }
+      ]
+    }
+  ]
+}

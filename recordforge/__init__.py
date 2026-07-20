@@ -138,6 +138,52 @@ def generate_related(
     return [renderer(name, datasets[name], out_dir) for name in RELATED_DATASETS]
 
 
+def generate_schema(
+    schema_path: str | Path,
+    output: str | Path | None = None,
+    format: str = "csv",
+    seed: int | None = None,
+) -> list[GeneratedDoc]:
+    """Generate a set of linked datasets from a YAML or JSON schema file.
+
+    The schema declares datasets, their columns (from a supported type
+    vocabulary), and foreign-key relationships. Datasets are generated in
+    dependency order so every foreign key resolves to a real parent key, then
+    each is rendered to one data ``format``. Returns a list of GeneratedDoc
+    instances, one per dataset, in the schema's declared order. Raises
+    ValueError for an invalid format or an invalid schema.
+    """
+    from recordforge.core.seed import get_rng, set_seed as _set_seed
+    from recordforge.schema import generate_datasets, load_schema
+    from recordforge.renderers import csv as csv_r, json as json_r, jsonl as jsonl_r, xlsx
+
+    if format not in DATA_FORMATS:
+        raise ValueError(
+            f"Format '{format}' is not valid for schemas. Use xlsx, csv, json, or jsonl."
+        )
+
+    schema = load_schema(schema_path)
+
+    if seed is not None:
+        _set_seed(seed)
+
+    rng = get_rng()
+    out_dir = Path(output) if output else Path.home() / "Documents" / "recordforge"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    datasets = generate_datasets(rng, schema)
+
+    _data_renderers = {
+        "xlsx": xlsx.render,
+        "csv": csv_r.render,
+        "json": json_r.render,
+        "jsonl": jsonl_r.render,
+    }
+    renderer = _data_renderers[format]
+
+    return [renderer(name, rows, out_dir) for name, rows in datasets.items()]
+
+
 def list_types() -> dict[str, list[str]]:
     """Return all available type keys grouped by category."""
     from recordforge.generators.data import DATA_REGISTRY
@@ -149,4 +195,12 @@ def list_types() -> dict[str, list[str]]:
     }
 
 
-__all__ = ["generate", "generate_related", "list_types", "set_seed", "GeneratedDoc", "__version__"]
+__all__ = [
+    "generate",
+    "generate_related",
+    "generate_schema",
+    "list_types",
+    "set_seed",
+    "GeneratedDoc",
+    "__version__",
+]
