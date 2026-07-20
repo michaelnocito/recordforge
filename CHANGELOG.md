@@ -8,6 +8,19 @@ All notable changes to this project are documented here.
 
 ## [2.1.0] — 2026-07-19
 
+### Desktop app — opt-in update check
+
+- The **Check for Updates** button now tells you whether a newer version exists
+  instead of only opening the Releases page. On click, the app reads the public
+  GitHub Releases API, compares the latest published version to the one you are
+  running, and shows "You're on the latest", "vX is available" (with a link to
+  get it), or a friendly offline message with a fallback link
+- This runs **only on an explicit click** — never at startup, never
+  automatically — and sends no personal data (a standard request header naming
+  the app and version is the only thing included). Generation stays fully
+  offline; if you never click the button, the app never touches the network.
+  Privacy and README wording updated to match
+
 ### New data formats — SQL and Parquet (Phase C, slice C3)
 
 - **SQL INSERT renderer** (`renderers/sql.py`, Postgres / ANSI flavor): emits
