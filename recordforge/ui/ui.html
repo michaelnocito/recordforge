@@ -74,12 +74,12 @@ body{margin:0;font-family:'IBM Plex Sans','Segoe UI',system-ui,-apple-system,Rob
       </div>
       <div class="wizard-body">
         <div class="mode-grid">
-          <div class="mode-card selected" data-mode="documents" onclick="selectMode('documents')">
+          <div class="mode-card" data-mode="documents" onclick="selectMode('documents')">
             <div style="font-size:20px;margin-bottom:4px">&#128196;</div>
             <div>Documents</div>
             <div style="font-size:11px;color:#52525B">PDF, Word, HTML</div>
           </div>
-          <div class="mode-card" data-mode="data" onclick="selectMode('data')">
+          <div class="mode-card selected" data-mode="data" onclick="selectMode('data')">
             <div style="font-size:20px;margin-bottom:4px">&#128202;</div>
             <div>Data Files</div>
             <div style="font-size:11px;color:#52525B">Excel, CSV, JSON, JSONL</div>
@@ -91,7 +91,7 @@ body{margin:0;font-family:'IBM Plex Sans','Segoe UI',system-ui,-apple-system,Rob
           </div>
         </div>
 
-        <div id="docTypePanel">
+        <div id="docTypePanel" style="display:none">
           <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#71717A;margin:12px 0 8px">Document types</h3>
           <div class="type-grid">
             <label class="type-card selected" id="tc-invoice"><input type="checkbox" value="invoice" checked onchange="updateTypeCard('tc-invoice',this)"><div><div>&#129534; Invoice</div><div style="color:#52525B;font-size:11px">Vendor billing, line items, totals</div></div></label>
@@ -103,7 +103,7 @@ body{margin:0;font-family:'IBM Plex Sans','Segoe UI',system-ui,-apple-system,Rob
           </div>
         </div>
 
-        <div id="dataTypePanel" style="display:none">
+        <div id="dataTypePanel">
           <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#71717A;margin:12px 0 8px">Data types</h3>
           <div class="type-grid">
             <label class="type-card selected" id="tc-customers"><input type="checkbox" value="customers" checked onchange="updateTypeCard('tc-customers',this)"><div><div>&#128101; Customer Records</div><div style="color:#52525B;font-size:11px">Tabular dataset</div></div></label>
@@ -146,7 +146,7 @@ body{margin:0;font-family:'IBM Plex Sans','Segoe UI',system-ui,-apple-system,Rob
           <input type="number" id="seedInput" placeholder="random"
                  style="width:160px;padding:6px 8px;border:1px solid #E4E7EA;border-radius:8px;font-size:13px">
         </div>
-        <div class="field" id="docFormatField">
+        <div class="field" id="docFormatField" style="display:none">
           <label>Document format</label>
           <div class="select-wrap">
             <select id="exportFormat">
@@ -157,7 +157,7 @@ body{margin:0;font-family:'IBM Plex Sans','Segoe UI',system-ui,-apple-system,Rob
             </select>
           </div>
         </div>
-        <div class="field" id="dataSettingsField" style="display:none">
+        <div class="field" id="dataSettingsField">
           <label>Data format &amp; size</label>
           <div class="select-wrap">
             <select id="dataFormat">
@@ -241,7 +241,7 @@ body{margin:0;font-family:'IBM Plex Sans','Segoe UI',system-ui,-apple-system,Rob
 <script>
 let currentStep = 1;
 let qty = 1;
-let selectedMode = 'documents';
+let selectedMode = 'data';
 const DOC_TYPES = ['invoice','purchase_order','intake_form','sop','contract','offer_letter'];
 const DATA_TYPES = ['customers','vendors','transactions','employees','inventory','payments','messy','edge_cases'];
 
@@ -281,7 +281,12 @@ function chooseFolder(){
 }
 
 function getSelectedTypes(){
-  return Array.from(document.querySelectorAll('.type-card input[type=checkbox]:checked')).map(cb=>cb.value);
+  const all = Array.from(document.querySelectorAll('.type-card input[type=checkbox]:checked')).map(cb=>cb.value);
+  // Only count types that belong to the current mode, so the review and file
+  // counts match what actually gets generated (the backend filters by mode too).
+  if(selectedMode === 'data') return all.filter(t=>DATA_TYPES.includes(t));
+  if(selectedMode === 'documents') return all.filter(t=>DOC_TYPES.includes(t));
+  return all;
 }
 
 function getDirtyConfig(){
