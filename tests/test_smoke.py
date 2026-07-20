@@ -773,6 +773,47 @@ def test_related_parquet_keeps_fk_integrity(tmp_path: Path):
     assert all(p["customer_id"] in customer_ids for p in by["payments"])
 
 
+# --- Opt-in update check (offline; network is monkeypatched) ---
+
+def test_parse_version_strips_prefix_and_suffix():
+    from recordforge.ui.app import _parse_version
+    assert _parse_version("v2.1.0") == (2, 1, 0)
+    assert _parse_version("2.10.3-rc1") == (2, 10, 3)
+    assert _parse_version("2.1.0") < _parse_version("2.1.1")
+    assert _parse_version("2.9.0") < _parse_version("2.10.0")  # numeric compare, not string ("9" > "10")
+
+
+def test_check_update_reports_available(monkeypatch):
+    from recordforge.ui import app
+    monkeypatch.setattr(app, "_fetch_latest_release",
+                        lambda: {"tag_name": "v99.0.0", "html_url": "https://example/rel"})
+    r = app.API().check_update()
+    assert r["status"] == "available"
+    assert r["latest"] == "99.0.0"
+    assert r["url"] == "https://example/rel"
+
+
+def test_check_update_reports_latest_when_same_or_older(monkeypatch):
+    from recordforge.ui import app
+    monkeypatch.setattr(app, "_fetch_latest_release", lambda: {"tag_name": f"v{app.__version__}"})
+    assert app.API().check_update()["status"] == "latest"
+    monkeypatch.setattr(app, "_fetch_latest_release", lambda: {"tag_name": "v0.0.1"})
+    assert app.API().check_update()["status"] == "latest"
+
+
+def test_check_update_never_raises_on_network_error(monkeypatch):
+    from recordforge.ui import app
+
+    def boom():
+        raise OSError("offline")
+
+    monkeypatch.setattr(app, "_fetch_latest_release", boom)
+    r = app.API().check_update()
+    assert r["status"] == "error"
+    assert r["current"] == app.__version__
+    assert "url" in r  # UI can still fall back to opening the releases page
+
+
 # --- Seed reproducibility ---
 
 def test_same_seed_same_doc_number():

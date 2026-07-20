@@ -24,9 +24,9 @@ All generated content — names, addresses, phone numbers, company names, dollar
 
 ## Network activity
 
-This app makes **zero network calls**. All document and data generation runs entirely offline. No data is ever sent to any server, API, or external service.
+All document and data generation runs **entirely offline**. Nothing you create, and no information about you or your machine, is ever sent anywhere. There is no telemetry, no analytics, and no account.
 
-The optional **Check for Updates** button is the single outward action, and it is opt-in. Clicking it opens the project's GitHub Releases page in your default web browser — the app hands off a URL exactly like clicking a hyperlink. The app itself fetches, downloads, and transmits nothing; no information about you, your machine, or your generated files is included or sent.
+The app makes **exactly one** network request, and only when you click **Check for Updates**. It reads the project's public GitHub Releases page to compare the latest published version number against the one you are running, then tells you whether a newer version exists. That request sends no personal data and nothing about your files — only a standard request header naming the app and its version. If you never click the button, the app never touches the network. You can also just open the Releases page in your browser instead.
 
 ---
 

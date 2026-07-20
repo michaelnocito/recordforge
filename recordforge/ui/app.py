@@ -5,9 +5,11 @@ Preserves the exact JSON contract from v1:
              or {"success": False, "error": str, "files": []}
 """
 
+import json as _json
 import os
 import subprocess
 import sys
+import urllib.request as _urlreq
 import webbrowser
 from pathlib import Path
 
@@ -19,6 +21,38 @@ from recordforge.generators.data import DATA_REGISTRY
 from recordforge.generators.documents import DOCUMENT_REGISTRY
 
 RELEASES_URL = "https://github.com/michaelnocito/recordforge/releases/latest"
+API_URL = "https://api.github.com/repos/michaelnocito/recordforge/releases/latest"
+
+
+def _parse_version(v: str) -> tuple[int, ...]:
+    """Parse a version string into comparable integer parts.
+
+    Strips a leading 'v' and any pre-release/build suffix (e.g. '2.1.0-rc1'),
+    and treats non-numeric parts as 0 so a malformed tag never crashes the
+    comparison.
+    """
+    core = str(v).strip().lstrip("v").split("-")[0].split("+")[0]
+    parts: list[int] = []
+    for piece in core.split("."):
+        parts.append(int(piece) if piece.isdigit() else 0)
+    return tuple(parts)
+
+
+def _fetch_latest_release() -> dict:
+    """Fetch the latest release JSON from the GitHub API. Raises on any failure.
+
+    This is the ONLY network request RecordForge makes, and it runs only when
+    the user clicks Check for Updates (never at startup, never automatically).
+    """
+    req = _urlreq.Request(
+        API_URL,
+        headers={
+            "User-Agent": f"RecordForge/{__version__}",
+            "Accept": "application/vnd.github+json",
+        },
+    )
+    with _urlreq.urlopen(req, timeout=8) as resp:
+        return _json.loads(resp.read().decode("utf-8"))
 
 
 def sanitize_filename(s: str) -> str:
@@ -68,13 +102,45 @@ class API:
         """Hand the GitHub Releases URL to the OS browser.
 
         The app makes no network request itself — the browser does, the
-        same as the user clicking a hyperlink. Keeps the offline guarantee.
+        same as the user clicking a hyperlink.
         """
         try:
             webbrowser.open(RELEASES_URL)
             return True
         except Exception:
             return False
+
+    def check_update(self) -> dict:
+        """Opt-in version check. Runs ONLY when the user clicks Check for Updates.
+
+        This is the single point where RecordForge itself reaches the network,
+        and only on an explicit click — never at startup, never automatically.
+        It asks the GitHub Releases API for the latest tag and compares it to the
+        running version. Returns a small status dict for the UI:
+
+          {"status": "latest",    "current": v, "latest": v, "url": ...}
+          {"status": "available", "current": v, "latest": newer, "url": ...}
+          {"status": "error",     "current": v, "message": str, "url": ...}
+
+        Any failure (offline, rate limit, bad response) returns 'error' with a
+        friendly message and never raises, so the button is always safe to click.
+        """
+        current = __version__
+        try:
+            data = _fetch_latest_release()
+        except Exception:
+            return {
+                "status": "error",
+                "current": current,
+                "message": "Couldn't reach GitHub (are you offline?).",
+                "url": RELEASES_URL,
+            }
+
+        latest = str(data.get("tag_name") or "").strip().lstrip("v")
+        url = data.get("html_url") or RELEASES_URL
+        if latest and _parse_version(latest) > _parse_version(current):
+            return {"status": "available", "current": current, "latest": latest, "url": url}
+        return {"status": "latest", "current": current, "latest": latest or current, "url": url}
 
     def generate(self, payload: dict) -> dict:
         """Generate files from the UI wizard payload.

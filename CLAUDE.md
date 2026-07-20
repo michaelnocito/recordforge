@@ -107,7 +107,12 @@ data engineering and ETL testing. See SPEC.md for full architecture.
 
 - Do not use `argparse` — CLI is Typer only.
 - Do not use `flask`, `fastapi`, or any web framework.
-- Do not make network calls anywhere.
+- Do not make network calls in generation (core, generators, renderers, CLI,
+  API). The ONE sanctioned exception is the opt-in update check in
+  `ui/app.py` (`check_update` / `_fetch_latest_release`): it runs only on an
+  explicit "Check for Updates" click, reads the public GitHub Releases API,
+  and sends no user data. Do not add any other network call, and do not make
+  this one run automatically or at startup.
 - Do not store or log user file paths.
 - Do not add dependencies not in SPEC.md without flagging it.
 - Do not use `WeasyPrint` — PDF renderer is `reportlab` only.

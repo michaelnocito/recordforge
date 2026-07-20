@@ -12,10 +12,12 @@ RecordForge is, and will stay, **free and open source.**
 
 Five pillars. If a feature serves none of them, it does not ship.
 
-1. **Trustworthy by construction** — nothing leaves your machine. No network
-   calls, no telemetry, works air-gapped. Every document is unmistakably
-   synthetic: visible watermark, deliberately fictitious and non-routable
-   identifiers, and provenance metadata in the file.
+1. **Trustworthy by construction** — nothing you create leaves your machine, no
+   telemetry, works air-gapped. Generation makes no network calls at all; the
+   only outward request is the opt-in update check you trigger by clicking Check
+   for Updates, which just reads the public releases list. Every document is
+   unmistakably synthetic: visible watermark, deliberately fictitious and
+   non-routable identifiers, and provenance metadata in the file.
 2. **Coherent & relational** — data that works together: foreign keys that
    actually join, fields that agree within a record, checksums that validate,
    money math that computes.

@@ -234,6 +234,7 @@ body{margin:0;font-family:'IBM Plex Sans','Segoe UI',system-ui,-apple-system,Rob
   All output is fictional and for testing / demo use only.<br>
   <span id="appVersion">RecordForge</span> &middot;
   <button type="button" class="link-btn" onclick="checkForUpdates()">Check for Updates</button>
+  <span id="updateStatus" style="color:#52525B"></span>
 </footer>
 </div>
 
@@ -400,12 +401,42 @@ function openPath(path){
   }
 }
 
-function checkForUpdates(){
+function openReleases(url){
   if(window.pywebview && window.pywebview.api && window.pywebview.api.open_releases){
     window.pywebview.api.open_releases();
   }else{
-    window.open('https://github.com/michaelnocito/recordforge/releases/latest','_blank');
+    window.open(url || 'https://github.com/michaelnocito/recordforge/releases/latest','_blank');
   }
+}
+
+function makeLink(status, label, url){
+  var a = document.createElement('button');
+  a.type = 'button'; a.className = 'link-btn'; a.textContent = label;
+  a.onclick = function(){ openReleases(url); };
+  status.appendChild(a);
+}
+
+function checkForUpdates(){
+  var status = document.getElementById('updateStatus');
+  // No bridge (opened in a plain browser): just open the Releases page.
+  if(!(window.pywebview && window.pywebview.api && window.pywebview.api.check_update)){
+    openReleases();
+    return;
+  }
+  if(status){ status.textContent = ' Checking…'; }
+  window.pywebview.api.check_update().then(function(r){
+    if(!status) return;
+    status.textContent = ' ';
+    if(r.status === 'available'){
+      status.appendChild(document.createTextNode('v' + r.latest + ' available — '));
+      makeLink(status, 'Get it', r.url);
+    }else if(r.status === 'latest'){
+      status.textContent = " You're on the latest (v" + r.current + ')';
+    }else{
+      status.appendChild(document.createTextNode((r.message || "Couldn't check for updates.") + ' '));
+      makeLink(status, 'Open Releases', r.url);
+    }
+  });
 }
 
 window.addEventListener('pywebviewready', function(){
