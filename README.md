@@ -129,7 +129,7 @@ When ready, replace this comment with:
 - Contract
 - Offer Letter
 
-**Data files** (Excel `.xlsx` / CSV / JSON / JSONL, with a configurable number of rows per file)
+**Data files** (Excel `.xlsx` / CSV / JSON / JSONL in the app; **SQL** and **Parquet** also available from the CLI, with a configurable number of rows per file)
 
 - Customer Records
 - Vendor Master
@@ -139,6 +139,25 @@ When ready, replace this comment with:
 - Payments — checksum-valid but fake cards (Luhn), IBANs (mod-97), and non-routable routing numbers (ABA), for testing payment validators
 - Messy Data — nulls, duplicates, bad formatting (great for cleanup testing)
 - Edge Cases — an adversarial corpus (boundaries, unicode, injection, bad dates) for stress-testing parsers and validators
+
+**Linked data that actually joins (new in v2.1.0)**
+
+Generate several tables at once with real foreign keys, so the rows join with
+no orphans. This is the part no cloud-free, offline generator usually does.
+
+- **Relational bundle** (`recordforge generate-related`): customers,
+  transactions, and payments generated together, where every transaction
+  belongs to a real customer and every payment settles a real transaction.
+- **Your own schema** (`recordforge generate-schema`): describe your tables,
+  columns, and relationships in a small YAML or JSON file. RecordForge builds
+  them in the correct order, handles self-references (like an employee's
+  manager), and refuses impossible loops with a clear message. Ready-made
+  examples live in [`examples/`](examples/).
+- **SQL and Parquet output**: export to ready-to-run `INSERT` statements
+  (written parents-first so they load without breaking foreign keys) or to
+  Parquet for data-engineering workflows. Parquet needs the optional
+  `pip install "recordforge[parquet]"` and is kept out of the desktop
+  installer to keep it small.
 
 Every org name, address, contact, and party detail is randomly generated
 per file. Pick an output folder, then open files directly from the app
@@ -176,11 +195,16 @@ recordforge generate --type invoice --format pdf --count 5
 recordforge generate --type customers --format csv --rows 500
 recordforge generate --type transactions --format jsonl --rows 10000 --seed 42
 recordforge generate --type customers --format csv --rows 200 --dirty "nulls=0.1,case_drift=0.2,duplicates=0.05"
+recordforge generate --type customers --format parquet --rows 1000
+recordforge generate-related --format csv --customers 100 --transactions 500 --payments 200
+recordforge generate-schema --schema examples/shop.yml --format sql --seed 1
 recordforge list-types
 ```
 
-Data types accept `--format xlsx | csv | json | jsonl` and `--rows` (records per
-file). Document types accept `--format pdf | docx | html`.
+Data types accept `--format xlsx | csv | json | jsonl | sql | parquet` and
+`--rows` (records per file). Document types accept `--format pdf | docx | html`.
+`generate-related` and `generate-schema` produce linked tables with real foreign
+keys; with `--format sql` they write a single, foreign-key-ordered `.sql` file.
 
 **Induce errors on purpose** with `--dirty` (or the "Induce errors" menu in the
 app) to test data-cleaning pipelines: choose any of `nulls`, `blanks`,
@@ -190,11 +214,18 @@ each at a rate you set.
 **Python API:**
 
 ```python
-from recordforge import generate
+from recordforge import generate, generate_related, generate_schema
 
+# One document/data type at a time
 docs = generate(type="invoice", format="pdf", count=3, output="./out")
 for doc in docs:
     print(doc.path)
+
+# Linked tables with real foreign keys, no orphans
+generate_related(output="./out", format="csv", customers=100, transactions=500, payments=200)
+
+# Your own tables and relationships from a schema file
+generate_schema("examples/shop.yml", output="./out", format="sql", seed=1)
 ```
 
 **Desktop UI:**
@@ -212,15 +243,18 @@ To build your own EXE or installer, see [INSTALL.md](INSTALL.md).
 ```text
 recordforge/
 ├── recordforge/
-│   ├── __init__.py              ← public Python API (generate, list_types, set_seed)
+│   ├── __init__.py              ← public Python API (generate, generate_related, generate_schema, list_types, set_seed)
 │   ├── __main__.py              ← python -m recordforge → desktop UI
-│   ├── cli.py                   ← Typer CLI
+│   ├── cli.py                   ← Typer CLI (generate, generate-related, generate-schema, list-types)
 │   ├── core/                    ← models, RNG, faker helpers, watermark engine
 │   ├── generators/
 │   │   ├── documents/           ← one module per document type
-│   │   └── data/                ← one module per data type
-│   ├── renderers/               ← pdf, docx, html, xlsx
+│   │   ├── data/                ← one module per data type
+│   │   └── related.py           ← built-in customers→transactions→payments bundle
+│   ├── schema/                  ← YAML/JSON schema loader, column types, FK graph + build engine
+│   ├── renderers/               ← pdf, docx, html, xlsx, csv, json, jsonl, sql, parquet
 │   └── ui/                      ← pywebview API bridge + wizard HTML
+├── examples/                    ← sample schema files (shop.yml, org.json)
 ├── tests/
 │   └── test_smoke.py
 ├── installer.iss                ← Inno Setup script
