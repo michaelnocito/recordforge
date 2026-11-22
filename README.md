@@ -306,11 +306,7 @@ If this project saved you time, the best thing you can do is
 [⭐ star the repo](https://github.com/michaelnocito/recordforge)
 — it helps others find it.
 
-If you'd like to support the work, a coffee is always appreciated but never expected.
-
-<a href="https://buymeacoffee.com/michaelnocito" target="_blank">
-  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="50">
-</a>
+Always free. Help keep the lights on: [tip the author on Gumroad](https://michaelnocito.gumroad.com/) if it helped.
 
 ---
 
