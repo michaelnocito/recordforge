@@ -298,7 +298,7 @@ A free browser-based suite for breaking into data analytics — SQL, Excel, Pyth
 A beginner Python project where you build a real data-cleaning tool layer by layer.
 The Messy Data output from RecordForge pairs directly with this cleaner.
 
-**[LinkedIn](https://www.linkedin.com/in/michaelnocito)** — data analyst · 8 years enterprise implementation
+**[LinkedIn](https://www.linkedin.com/in/michaelnocito)** — implementation analyst · 8 years enterprise implementation
 
 ---
 
